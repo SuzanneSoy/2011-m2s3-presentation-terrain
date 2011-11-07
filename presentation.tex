@@ -94,27 +94,44 @@
 \begin{frame}
   \frametitle{Érosion}
   \begin{itemize}
-  \item Pas temps-réel
+  \item Déplacement de sédiments.
+  \item Taux en fonction de la pente.
+  \item Végétation.
+  \item Pas temps-réel.
   \item Approximation : modification de la distribution des hauteurs.
-  \item 
   \end{itemize}
 \end{frame}
 
+\subsection{Autres}
+\begin{frame}
+  \frametitle{Autres méthodes}
+  \begin{itemize}
+  \item Chaînage d'algorithmes de bruit
+    \begin{itemize}
+    \item Ajout de couleurs, climats\dots à une carte d'élévation.
+    \item Altération du comportement d'un algo à certains endroits.
+    \item {\tiny http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}
+    \end{itemize}
+  \item Cartes polygonales. {\tiny http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}
+  \item Intégration de formes dans le terrain.
+  \end{itemize}
+\end{frame}
 
-% blending stuff in the terrain
-% =============================
+\subsection{Rivières}
 
-% Rivières
-% ========
-
-% [Pathfinding pour créer des rivières](http://www.umbrarumregnum.net/articles/creating-rivers).
+\begin{frame}
+  \frametitle{Rivières}
+  \begin{itemize}
+  \item Pathfinding pour créer des rivières {\tiny http://www.umbrarumregnum.net/articles/creating-rivers}
+  \item Affinage du tracé en fonction du LOD.
+  \item Tracés arbitraires.
+  \item Intégration des rivières dans le terrain.
+  \end{itemize}
+\end{frame}
 % Si on utilise une méthode de coût qui favorise de passer par un petit
 % bout de bruit plutôt que de le contourner, mais favorise le
 % contournement pour une grosse accumulation de bruit, on pourra même
 % simuler l'érosion qui efface les méandres trop petits.
-
-% midpoint displacement
-% =====================
 
 \subsection{Démonstration}
 \begin{frame}
@@ -211,16 +228,18 @@
 \begin{frame}
   \frametitle{Sources}
 % Génération
-% * [Différents algos](http://www.sluniverse.com/php/vb/project-development/34994-automatically-generated-terrain-map.html) : Ridged Perlin Noise, Hills Algorithm, Craters, Erosion.
+% * [Différents algos]() : Ridged Perlin Noise, Hills Algorithm, Craters, Erosion.
 % * [Plein d'algos](http://planetgenesis.sourceforge.net/docs15/noise/noise.html#tileworley) dont plusieurs basés sur une sorte de voronoi donc à priori trop lents.
 % * Affichage avec Ogre : [forum](http://www.ogre3d.org/forums/viewtopic.php?f=5&t=67177&p=442222), [doc](http://www.ogre3d.org/docs/api/html/classOgre_1_1BillboardSet.html)
   \begin{itemize}
-  \item www.gamasutra.com
-  \item vterrain.org
+  \item http://www.gamasutra.com
+  \item http://vterrain.org
   % \item Mojoworld generator (mojoworld.org)
-  \item world-machine.com
-  \item Création de cartes polygonales ({\footnotesize http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/})
-  \item \dots
+  \item http://world-machine.com
+  \item Algorithmes de bruit {\tiny http://www.sluniverse.com/php/vb/project-development/34994-automatically-generated-terrain-map.html}
+  \item Composition d'algorithmes de bruit {\tiny http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}
+  \item Création de cartes polygonales {\tiny http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}
+  \item Pathfinding pour créer des rivières {\tiny http://www.umbrarumregnum.net/articles/creating-rivers}
   \end{itemize}
 \end{frame}
 
