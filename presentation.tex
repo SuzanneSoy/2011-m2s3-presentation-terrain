@@ -1,0 +1,144 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[frenchb]{babel}
+\usepackage{tikz}
+\makeatletter\def\@makecaption{}\makeatother
+\usepackage[scriptsize]{caption}
+\renewcommand*{\figurename}{}
+\usetikzlibrary{shapes,positioning,snakes,calc,chains}
+\usetheme{Frankfurt}
+\usepackage{graphicx}
+
+\title{FMIN327 Cognition individuelle et collective\\ Protocoles artificiels entre agents naturels}
+\author{DUPÉRON Georges \and\\ BONAVERO Yoann}
+\institute{Université Montpellier II,\\Département informatique  \\ Master 2 IFPRU \\ Sous la direction de Monsieur Jacques Ferber}
+\date{Jeudi, 3 novembre 2011}
+
+\defbeamertemplate*{footline}{shadow theme}
+{%
+  \leavevmode%
+  \hbox{\begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm plus1fil,rightskip=.3cm]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertframenumber\,/\,\inserttotalframenumber%\hfill\url{http://www.pticlic.fr/}
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm,rightskip=.3cm plus1fil]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle%
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+
+\AtBeginSection[] { 
+  \begin{frame}
+    \frametitle{Plan} 
+    \tableofcontents[currentsection] 
+  \end{frame} 
+  \addtocounter{framenumber}{-1} 
+}
+
+\begin{document}
+\renewcommand*{\figurename}{}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\section{Introduction}
+
+\section{Génération}
+
+\subsection{Perlin noise}
+% Ridged Perlin Noise
+
+% [Démo de Ridged Perlin Noise](http://www.inear.se/2010/04/ridged-perlin-noise/)
+
+%     // Fait des crêtes de montagnes ou vallées.
+%     abs(perlinNoise());
+
+% Hills Algorithm
+% ---------------
+
+% Inverse de craters : on ajoute plein de cercles :
+
+%     repeat 1000 times :
+%         r=random();
+% 	cx=random();
+% 	cy=random();
+% 	terrain[x][y] += r**2 + ((x-cx)**2 – (y-cy)**2)
+
+% Craters
+% -------
+
+% Soustraire des cercles (profondeur = f(distance au centre)) au terrain
+% existant.
+% Ou : générer un terrain nu, et soustraire plein de cercles aléatoirs.
+
+% Erosion
+% -------
+
+% Modélisation correcte : trop lent. À la place, outil "courbes" de gimp.
+
+% Rivières
+% ========
+
+% [Pathfinding pour créer des rivières](http://www.umbrarumregnum.net/articles/creating-rivers).
+% Si on utilise une méthode de coût qui favorise de passer par un petit
+% bout de bruit plutôt que de le contourner, mais favorise le
+% contournement pour une grosse accumulation de bruit, on pourra même
+% simuler l'érosion qui efface les méandres trop petits.
+
+
+\section{Rendu}
+
+\subsection{Isosurfaces}
+
+\subsection{Ray casting}
+
+% Ma démo
+\begin{frame}
+  \begin{itemize}
+  \item Très simple à implémenter
+  \item Très bons résultats avec du sampling
+  \item Très lent
+  \end{itemize}
+\end{frame}
+
+\subsubsection{Monte carlo}
+
+\section{Niveau de détail}
+
+\subsection{ROAM}
+
+\subsection{CLOD}
+
+\subsection{Notre algo}
+
+% Triangle fans
+
+\section{Streaming de scène}
+
+\begin{frame}
+  \texttt{/usr/lib/xscreensaver/crackberg}
+\end{frame}
+
+\section{Conclusion}
+
+\begin{frame}
+  \frametitle{Conclusion}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Sources}
+% Génération
+% * [Différents algos](http://www.sluniverse.com/php/vb/project-development/34994-automatically-generated-terrain-map.html) : Ridged Perlin Noise, Hills Algorithm, Craters, Erosion.
+% * [Plein d'algos](http://planetgenesis.sourceforge.net/docs15/noise/noise.html#tileworley) dont plusieurs basés sur une sorte de voronoi donc à priori trop lents.
+% * Affichage avec Ogre : [forum](http://www.ogre3d.org/forums/viewtopic.php?f=5&t=67177&p=442222), [doc](http://www.ogre3d.org/docs/api/html/classOgre_1_1BillboardSet.html)
+  \begin{itemize}
+  \item gamasutra
+  \item vterrain
+  \item mojoworld generator
+  \item ***world machine***
+  \item http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/
+  \item \dots
+  \end{itemize}
+\end{frame}
+
+\end{document}
