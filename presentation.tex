@@ -10,17 +10,18 @@
 %   urlcolor=black%
 % }
 \usepackage{tikz}
-\makeatletter\def\@makecaption{}\makeatother
-\usepackage[scriptsize]{caption}
-\renewcommand*{\figurename}{}
+%\makeatletter\def\@makecaption{}\makeatother
+%\usepackage[scriptsize]{caption}
+%\captionsetup[figure]{labelformat=empty, labelsep=none}
+%\renewcommand*{\figurename}{}
 \usetikzlibrary{shapes,positioning,snakes,calc,chains}
 \usetheme{Frankfurt}
 \usepackage{graphicx}
 
 \title{FMIN313 Moteurs de jeux\\ Génération de terrains}
 \author{DUPÉRON Georges \and\\ BONAVERO Yoann}
-\institute{Université Montpellier II,\\Département informatique  \\ Master 2 IFPRU \\ Sous la direction de Monsieur Jacques Ferber}
-\date{Lundi 7 novembre 2011}
+\institute{Université Montpellier II,\\Département informatique\\Master 2 IFPRU\\Encadrants~: F. Koriche et M. Moulis}
+\date{Lundi 14 novembre 2011}
 
 \defbeamertemplate*{footline}{shadow theme}
 {%
@@ -34,16 +35,27 @@
   \vskip0pt%
 }
 
-\AtBeginSection[] { 
+%\defbeamertemplate*{caption}{numbered}
+%{%
+%  \raggedright
+%  {%
+%    \usebeamercolor[fg]{caption name}%
+%    \usebeamerfont*{caption name}%
+%    \insertcaptionname~\insertcaptionnumber:____%
+%  }
+%  \insertcaption\par
+%}
+
+\AtBeginSection[] {
   \begin{frame}
-    \frametitle{Plan} 
-    \tableofcontents[currentsection] 
-  \end{frame} 
-  \addtocounter{framenumber}{-1} 
+    \frametitle{Plan}
+    \tableofcontents[currentsection]
+  \end{frame}
+  \addtocounter{framenumber}{-1}
 }
 
 \begin{document}
-\renewcommand*{\figurename}{}
+\makeatletter\renewcommand*{\figurename}{\@gobble}\makeatother
 
 \begin{frame}
   \titlepage
@@ -58,12 +70,22 @@
   \frametitle{Perlin noise}
   \begin{itemize}
   \item Superposition d'octaves de bruit
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+      \draw[draw=blue] (0,0) -- (1,1) -- (2,0);
+    \end{tikzpicture}
+    \caption{Perlin noise}
+  \end{figure}
   \item Interpolation linéaire, cubique ou cosinusoidale.
   \item Amplitude, octaves, fréquence, persistance (modification des amplitudes pour chaque octave).
-  \item Ridged Perlin Noise
-    % [Démo de Ridged Perlin Noise](http://www.inear.se/2010/04/ridged-perlin-noise/)
-    % // Fait des crêtes de montagnes ou vallées.
-    % abs(perlinNoise());
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Perlin noise (Variations)}
+  \begin{itemize}
+  \item Ridged Perlin Noise.
   \item Midpoint displacement.
   \item Simplex noise : généralisation des triangles équilatéraux à $n$ dimensions, interpolation par rapport aux coins.
   \item Bruit répétable 1D : points sur un cercle dans un espace 2D. Généralisation à $n$ dimensions : hypercercle $n$D dans un espace $2n$D.
