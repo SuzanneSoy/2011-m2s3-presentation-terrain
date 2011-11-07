@@ -1,6 +1,14 @@
 \documentclass{beamer}
 \usepackage[utf8]{inputenc}
 \usepackage[frenchb]{babel}
+\usepackage{hyperref}
+% \hypersetup{%
+%   colorlinks,%
+%   citecolor=black,%
+%   filecolor=black,%
+%   linkcolor=black,%
+%   urlcolor=black%
+% }
 \usepackage{tikz}
 \makeatletter\def\@makecaption{}\makeatother
 \usepackage[scriptsize]{caption}
@@ -41,40 +49,60 @@
   \titlepage
 \end{frame}
 
-\section{Introduction}
+% \section{Introduction}
 
 \section{Génération}
 
 \subsection{Perlin noise}
-% Ridged Perlin Noise
+\begin{frame}
+  \frametitle{Perlin noise}
+  \begin{itemize}
+  \item Superposition d'octaves de bruit
+  \item Interpolation linéaire, cubique ou cosinusoidale.
+  \item Amplitude, octaves, fréquence, persistance (modification des amplitudes pour chaque octave).
+  \item Ridged Perlin Noise
+    % [Démo de Ridged Perlin Noise](http://www.inear.se/2010/04/ridged-perlin-noise/)
+    % // Fait des crêtes de montagnes ou vallées.
+    % abs(perlinNoise());
+  \item Midpoint displacement.
+  \item Simplex noise : généralisation des triangles équilatéraux à $n$ dimensions, interpolation par rapport aux coins.
+  \item Bruit répétable 1D : points sur un cercle dans un espace 2D. Généralisation à $n$ dimensions : hypercercle $n$D dans un espace $2n$D.
+  \item Cevernes, nuages, textures, terrains : bruit $n$D et voxels (minefield).
+  \end{itemize}
+\end{frame}
 
-% [Démo de Ridged Perlin Noise](http://www.inear.se/2010/04/ridged-perlin-noise/)
+\subsection{Craters et Hills Algorithm}
+\begin{frame}
+  \frametitle{Craters et Hills Algorithm}
+  \begin{itemize}
+  \item Craters
+    \begin{itemize}
+    \item Soustraire des cercles au terrain (z = z - f(distance au centre))
+    \item Sur un terrain nu
+    \item Sur un terrain existant
+    \end{itemize}
+  \item Hills Algorithm
+    \begin{itemize}
+    \item Inverse de craters : on ajoute plein de cercles
+    \end{itemize}
+  \item Stockage des cercles dans un arbre (BSP, Quadtree, arbre du LOD, \dots).
+  \end{itemize}
+\end{frame}
 
-%     // Fait des crêtes de montagnes ou vallées.
-%     abs(perlinNoise());
+\subsection{Érosion}
 
-% Hills Algorithm
-% ---------------
+\begin{frame}
+  \frametitle{Érosion}
+  \begin{itemize}
+  \item Pas temps-réel
+  \item Approximation : modification de la distribution des hauteurs.
+  \item 
+  \end{itemize}
+\end{frame}
 
-% Inverse de craters : on ajoute plein de cercles :
 
-%     repeat 1000 times :
-%         r=random();
-% 	cx=random();
-% 	cy=random();
-% 	terrain[x][y] += r**2 + ((x-cx)**2 – (y-cy)**2)
-
-% Craters
-% -------
-
-% Soustraire des cercles (profondeur = f(distance au centre)) au terrain
-% existant.
-% Ou : générer un terrain nu, et soustraire plein de cercles aléatoirs.
-
-% Erosion
-% -------
-
-% Modélisation correcte : trop lent. À la place, outil "courbes" de gimp.
+% blending stuff in the terrain
+% =============================
 
 % Rivières
 % ========
@@ -88,46 +116,97 @@
 % midpoint displacement
 % =====================
 
-% + blending stuff in the terrain
+\subsection{Démonstration}
+\begin{frame}
+  \frametitle{Démonstration}
+  World machine.
+\end{frame}
 
 \section{Rendu}
 
 \subsection{Isosurfaces}
+\begin{frame}
+  
+\end{frame}
 
 \subsection{Ray casting}
 
-% Ma démo
 \begin{frame}
   \begin{itemize}
+  \item Démonstration
   \item Très simple à implémenter
   \item Très bons résultats avec du sampling
   \item Très lent
+  \item Démonstration (concours d'assembleur)
+  \item Monte carlo
   \end{itemize}
 \end{frame}
 
-\subsubsection{Monte carlo}
-
-\section{Niveau de détail}
+\section[LOD]{Niveau de détail}
 
 \subsection{ROAM}
+\begin{frame}
+  \frametitle{ROAM}
+  \begin{itemize}
+  \item Triangle bintree.
+  \item Opération split et merge : voisins «base», «gauche» et «droite».
+  \item Défaut maximal visible à l'écran.
+  \item Split queue et Merge queue.
+  \item Frustum culling : utilisation de drapaux.
+  \item Améliorations~:
+    \begin{itemize}
+    \item Triangle stripping.
+    \item Geomorphing.
+    \item Calcul différé des priorités dans les queues.
+    \item Temps réel.
+    \end{itemize}
+  \item Temps de calcul proportionnel au nombre de triangles mis à jour.
+  \end{itemize}
+\end{frame}
 
-\subsection{CLOD}
+\subsection{Geometry clipmaps}
+\begin{frame}
+  \frametitle{Geometry clipmaps}
+  \begin{itemize}
+  \item Carrés concentriques avec des LOD différents.
+  \item Comme le mipmapping de textures.
+  \item Utilisation forte du GPU.
+  \item Displacement shader.
+  \item Remplissage à la jointure des LOD.
+  \end{itemize}
+\end{frame}
 
 \subsection{Notre algo}
+\begin{frame}
+  \frametitle{Notre algorithme}
+  \begin{itemize}
+  \item Triangle quadtree.
+  \item Pas CLOD : les LOD de deux carrés adjacents sont très différents.
+  \item Mais on triche pour ne pas avoir de trous dans le mesh.
+  \item Triangle fans.
+  \item Calcul du LOD en fonction de la distance
+  \item On met à jour une branche si elle n'a pas le LOD égal à celui voulu.
+  \item Temps de calcul proportionnel au nombre de triangles mis à jour.
+  \end{itemize}
+\end{frame}
 
 % Triangle fans
 
-\section{Streaming de scène}
-
+\subsection{Streaming de scène}
 \begin{frame}
+  \frametitle{Streaming de scène}
+  \begin{itemize}
+  \item Transfert de morceaux entiers de terrain avec le LOD maximal.
+  \item Qualité progressive des tiles.
   \texttt{/usr/lib/xscreensaver/crackberg}
+  \end{itemize}
 \end{frame}
 
-\section{Conclusion}
+% \section{Conclusion}
 
-\begin{frame}
-  \frametitle{Conclusion}
-\end{frame}
+% \begin{frame}
+%   \frametitle{Conclusion}
+% \end{frame}
 
 \begin{frame}
   \frametitle{Sources}
@@ -138,9 +217,9 @@
   \begin{itemize}
   \item www.gamasutra.com
   \item vterrain.org
-  \item mojoworld.org % mojoworld generator
+  % \item Mojoworld generator (mojoworld.org)
   \item world-machine.com
-  \item http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/
+  \item Création de cartes polygonales ({\footnotesize http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/})
   \item \dots
   \end{itemize}
 \end{frame}
