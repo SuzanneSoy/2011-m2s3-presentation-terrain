@@ -94,8 +94,46 @@ Rendu
 
 Isosurfaces
 -----------
+- Metaballs : ce sont des isosurfaces. 
+Une des premières utilisation répendue des isosurfaces.
 
+- Surface 2D d'un bruit 3D : au lieu d'utiliser voxel utiliser isosurfaces coûte moins cher.
+
+- Simplification de nuages : avec temps de calcul plutôt réduit. Angrandir les faces et mettre une texture floue vers transparent.
+
+- Surface de l'eau : Les raytracer permettent de réaliser ce genre de forme.
 
 
 Ray casting
 -----------
+- Très simple à implémenter : il y a un shéma.
+- Sampling : problème : Les points éloignés vont beaucoup varier d'une image à l'autre donc scintillement.
+Lancer une série de rayons par pixel autour de la cible et faire la moyenne.
+Autre solution mip mapping de texture : avec perlin noise il suffit de baisser le nombre d'octaves (résultat plus homogène).
+- Très lent.
+- Démonstration.
+Concours d'assembleur : Le binaire ne fait 512 octets.
+- Monte Carlo : Plutôt que de redessiner chaque frame en entier, retracer des pixels aléatoirement rapprochement du sampling (Attracteur de Peter de Jong).
+
+
+
+LOD
+===
+ROAM
+----
+- Triangle bintree : qu'est-ce que c'est ? constitution.
+- split merge : figure split forcé. Ensuite merge du premier triangle.
+CLOD : continuous level of detail. Mise à jour incrémentale du mesh pour l'optimiser pour la position de caméra courante.
+- Défaut maximal visible à l'écran : borne maximale de l'erreur sur la hauteur du contenu. On mesure la surface projetée à l'écran du pavé triangulaire. C'est l'erreur maximale en pixels.
+- Split et merge queue : tri des triangles en fonction de leur erreur en pixel. On découpe ceux qui ont une trop grosse erreur et on fusionne ceux qui ont une erreur faible.
+- Frustum culling : utilisation de drapeaux. pour chaque triangle de l'arbre de LOD on marque si il est entièrement visible entièrement caché ou partiellement visible. On recalcule à chaque frame ces drapeaux. Quand on rencontre un entièrement visible qui l'est toujours et pareil pour caché on ne parcourt pas le sous-arbre.
+- Améliorations :
+  - Triangle stripping : mettre à jour incrémentalement des listes de triangles contigus.
+  - Geomorphing : quand on rajoute un vertex on l'anime depuis sa position interpolée.
+  - Calcul différé des priorités dans les queues : plutôt que de recalculer l'erreur en pixels de chaque triangle à chaque frame recalculer uniquement ceux qui risquent de se "superposer".
+  - Temps réel : on peut arrêter les split merge à tout moment on à un mesh cohérent et de bonne qualité.
+- Complexité : O(nombre ...).
+
+
+
+FIN.

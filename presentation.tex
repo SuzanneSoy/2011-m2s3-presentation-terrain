@@ -179,7 +179,10 @@
 \begin{frame}
   \frametitle{Isosurfaces}
   \begin{itemize}
-    \item Metaballs
+    \item Metaballs % TODO : écran de veille / screenshot.
+    \item Surface 2D d'un bruit 3D.
+    \item Simplification de nuages.
+    \item Surface de l'eau.
   \end{itemize}
 \end{frame}
 
@@ -188,12 +191,12 @@
 \begin{frame}
   \frametitle{Ray casting}
   \begin{itemize}
-  \item Démonstration
-  \item Très simple à implémenter
-  \item Très bons résultats avec du sampling
+  \item Très simple, très petit code.
+	% TODO : Schéma d'explication
+  \item Sampling
   \item Très lent
-  \item Démonstration (concours d'assembleur)
-  \item Monte carlo
+  \item Démonstration
+  \item Monte Carlo
   \end{itemize}
 \end{frame}
 
@@ -204,9 +207,13 @@
   \frametitle{ROAM}
   \begin{itemize}
   \item Triangle bintree.
-  \item Opération split et merge : voisins «base», «gauche» et «droite».
+	% TODO : Figure : triangle avec 2 fils.
+  \item Split et merge. CLOD.
+	% TODO : Figure : split forcé, merge d'un losange.
   \item Défaut maximal visible à l'écran.
+	% TODO : Figure : Dessin projection pavé triangle erreur à l'écran.
   \item Split queue et Merge queue.
+	% TODO : queues l'une au-dessus de l'autre, montrer qu'on va +- les priorités pour éviter le chevauchement.
   \item Frustum culling : utilisation de drapaux.
   \item Améliorations~:
     \begin{itemize}
@@ -215,7 +222,7 @@
     \item Calcul différé des priorités dans les queues.
     \item Temps réel.
     \end{itemize}
-  \item Temps de calcul proportionnel au nombre de triangles mis à jour.
+  \item $O(\text{Nb triangles mis à jour})$
   \end{itemize}
 \end{frame}
 
