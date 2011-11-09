@@ -1,3 +1,6 @@
+Introduction.
+
+
 Perlin noise
 ============
 Quatre shémas
@@ -134,6 +137,33 @@ CLOD : continuous level of detail. Mise à jour incrémentale du mesh pour l'opt
   - Temps réel : on peut arrêter les split merge à tout moment on à un mesh cohérent et de bonne qualité.
 - Complexité : O(nombre ...).
 
+Geometry clipmaps
+-----------------
+- carré concentrique : A compléter sans bêtises
+
+Notre algo
+----------
+QuadTree de carré.
+- Peut avoir une LOD très différent sur deux carrés adjacents.
+- Trou dans le mesh.
+- Triangle fan
+- LOD en fonction de la distance car calcul de ROAM coûteux et le problème est le CPU.
+- On met à jour une branche si elle n'a pas le LOD voulu.
+- real time
+- complexité : comme pour le ROAM.
+
+Streaming de scène
+------------------
+- Modèle client/serveur.
+- Tiles avec le LOD max :
+soucis : beaucoup de données loin de la caméra et inutiles.
+- Qualité progressive des tiles.
+- Geometry clipmaps : pour une zone donnée plusieurs tiles avec des LOD différents superposés.
+- Ecran de veille crackberg.
+
+Source
+======
+Afficher les sources.
 
 
 FIN.

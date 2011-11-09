@@ -242,25 +242,26 @@
 \begin{frame}
   \frametitle{Notre algorithme}
   \begin{itemize}
-  \item Triangle quadtree.
-  \item Pas CLOD : les LOD de deux carrés adjacents sont très différents.
-  \item Mais on triche pour ne pas avoir de trous dans le mesh.
+  \item Quadtree de carrés.
+	% TODO : figure
+	% TODO : figure trous dans le mesh
   \item Triangle fans.
-  \item Calcul du LOD en fonction de la distance
-  \item On met à jour une branche si elle n'a pas le LOD égal à celui voulu.
-  \item Temps de calcul proportionnel au nombre de triangles mis à jour.
+  \item LOD en fonction de la distance.
+  \item Mise à jour de quelques branches seulement.
+  \item Temps réel.
+  \item $O(\text{Nb triangles mis à jour})$
   \end{itemize}
 \end{frame}
-
-% Triangle fans
 
 \subsection{Streaming de scène}
 \begin{frame}
   \frametitle{Streaming de scène}
   \begin{itemize}
-  \item Transfert de morceaux entiers de terrain avec le LOD maximal.
+  \item Modèle client/serveur.
+  \item Tiles avec LOD maximal.
   \item Qualité progressive des tiles.
-  \texttt{/usr/lib/xscreensaver/crackberg}
+  \item Geometry clipmaps.
+  \item \texttt{/usr/lib/xscreensaver/crackberg}
   \end{itemize}
 \end{frame}
 
