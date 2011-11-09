@@ -2,18 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[frenchb]{babel}
 \usepackage{hyperref}
-% \hypersetup{%
-%   colorlinks,%
-%   citecolor=black,%
-%   filecolor=black,%
-%   linkcolor=black,%
-%   urlcolor=black%
-% }
 \usepackage{tikz}
-%\makeatletter\def\@makecaption{}\makeatother
-%\usepackage[scriptsize]{caption}
-%\captionsetup[figure]{labelformat=empty, labelsep=none}
-%\renewcommand*{\figurename}{}
 \usetikzlibrary{shapes,positioning,snakes,calc,chains}
 \usetheme{Frankfurt}
 \usepackage{graphicx}
@@ -35,17 +24,6 @@
   \vskip0pt%
 }
 
-%\defbeamertemplate*{caption}{numbered}
-%{%
-%  \raggedright
-%  {%
-%    \usebeamercolor[fg]{caption name}%
-%    \usebeamerfont*{caption name}%
-%    \insertcaptionname~\insertcaptionnumber:____%
-%  }
-%  \insertcaption\par
-%}
-
 \AtBeginSection[] {
   \begin{frame}
     \frametitle{Plan}
@@ -65,6 +43,18 @@
 
 \section{Génération}
 
+\def\dohash#1#2{
+  \pgfmathsetmacro\hash{#1}
+  \pgfmathsetmacro\hashb{#2}
+  \pgfmathsetmacro\hash{mod((\hash+#1)*\hashb+0.37,1)}
+  \pgfmathsetmacro\hashb{(1+\hashb)*0.526}
+  \pgfmathsetmacro\hash{mod((\hash+#1)*\hashb+0.59,1)}
+  \pgfmathsetmacro\hashb{\hashb*0.415+42}
+  \pgfmathsetmacro\hash{mod((\hash+#1)*\hashb+0.23,1)}
+  \pgfmathsetmacro\hashb{\hashb*0.273+132}
+  \pgfmathsetmacro\hash{mod((\hash+#1*#1)*\hashb+0.78,1)}
+  \pgfmathsetmacro\hash{mod(\hash,1)}
+}
 \subsection{Perlin noise}
 \begin{frame}
   \frametitle{Perlin noise}
@@ -73,7 +63,14 @@
   \begin{figure}[h]
     \centering
     \begin{tikzpicture}
-      \draw[draw=blue] (0,0) -- (1,1) -- (2,0);
+      \xdef\oldhash{0}
+      \xdef\oldi{0}
+      \foreach \i in {1,2,...,4}{
+        \dohash{\i}{0}
+        \draw[draw=blue] (\oldi,\oldhash) -- (\i,\hash);
+        \xdef\oldhash{\hash}
+        \xdef\oldi{\i}
+      }
     \end{tikzpicture}
     \caption{Perlin noise}
   \end{figure}
