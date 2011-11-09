@@ -78,18 +78,20 @@
     \caption{Perlin noise}
   \end{figure}
   \item Interpolation linéaire, cubique ou cosinusoidale.
-  \item Amplitude, octaves, fréquence, persistance (modification des amplitudes pour chaque octave).
+  \item Amplitude, octaves, fréquence, persistance.
+  \item Hash de coordonnées% TODO
   \end{itemize}
 \end{frame}
 
 \begin{frame}
   \frametitle{Perlin noise (Variations)}
   \begin{itemize}
+  \item Cevernes, nuages, textures, terrains : bruit $n$D et voxels.
   \item Ridged Perlin Noise.
   \item Midpoint displacement.
-  \item Simplex noise : généralisation des triangles équilatéraux à $n$ dimensions, interpolation par rapport aux coins.
+  \item Simplex noise : généralisation des triangles équilatéraux à $n$ dimensions, interpolation par rapport aux coins. $d^2$ au lieu de $2^d$.
   \item Bruit répétable 1D : points sur un cercle dans un espace 2D. Généralisation à $n$ dimensions : hypercercle $n$D dans un espace $2n$D.
-  \item Cevernes, nuages, textures, terrains : bruit $n$D et voxels (minefield).
+	%TODO : référence
   \end{itemize}
 \end{frame}
 
@@ -101,13 +103,15 @@
     \begin{itemize}
     \item Soustraire des cercles au terrain (z = z - f(distance au centre))
     \item Sur un terrain nu
+	% TODO : image
     \item Sur un terrain existant
+	% TODO : image
     \end{itemize}
   \item Hills Algorithm
     \begin{itemize}
     \item Inverse de craters : on ajoute plein de cercles
     \end{itemize}
-  \item Stockage des cercles dans un arbre (BSP, Quadtree, arbre du LOD, \dots).
+  \item Stockage des cercles dans un arbre (BSP, Quadtree, arbre du LOD, \dots{}).
   \end{itemize}
 \end{frame}
 
@@ -117,10 +121,10 @@
   \frametitle{Érosion}
   \begin{itemize}
   \item Déplacement de sédiments.
-  \item Taux en fonction de la pente.
-  \item Végétation.
+  \item Taux en fonction de la pente, dureté de la roche, végétation.
+  \item Carte de circulation des eaux.
   \item Pas temps-réel.
-  \item Approximation : modification de la distribution des hauteurs.
+  \item Approximation : modification de la distribution des hauteurs. % TODO : schéma
   \end{itemize}
 \end{frame}
 
@@ -130,11 +134,12 @@
   \begin{itemize}
   \item Chaînage d'algorithmes de bruit
     \begin{itemize}
-    \item Ajout de couleurs, climats\dots à une carte d'élévation.
-    \item Altération du comportement d'un algo à certains endroits.
-    \item {\tiny http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}
+    \item Ajout de couleurs, climats, végétation, relief\dots{}
+    \item Altération du comportement d'un algo.
+    \item {\tiny\url{http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}}
     \end{itemize}
-  \item Cartes polygonales. {\tiny http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}
+  \item Cartes polygonales. {\tiny\url{http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}}
+	% TODO : voronoi etc.
   \item Intégration de formes dans le terrain.
   \end{itemize}
 \end{frame}
@@ -144,10 +149,12 @@
 \begin{frame}
   \frametitle{Rivières}
   \begin{itemize}
-  \item Pathfinding pour créer des rivières {\tiny http://www.umbrarumregnum.net/articles/creating-rivers}
+  \item Pathfinding {\tiny\url{http://www.umbrarumregnum.net/articles/creating-rivers}}
+	% Image
   \item Affinage du tracé en fonction du LOD.
-  \item Tracés arbitraires.
-  \item Intégration des rivières dans le terrain.
+	% Schéma sur un ou deux niveaux d'affinage.
+  \item Tracé arbitraire.
+  \item Intégration dans le terrain.
   \end{itemize}
 \end{frame}
 % Si on utilise une méthode de coût qui favorise de passer par un petit
@@ -158,19 +165,28 @@
 \subsection{Démonstration}
 \begin{frame}
   \frametitle{Démonstration}
-  World machine.
+  \begin{center}
+  {\Huge World machine}
+  
+  \vspace{1em}
+  \url{http://www.world-machine.com/}
+  \end{center}
 \end{frame}
 
 \section{Rendu}
 
 \subsection{Isosurfaces}
 \begin{frame}
-  
+  \frametitle{Isosurfaces}
+  \begin{itemize}
+    \item Metaballs
+  \end{itemize}
 \end{frame}
 
 \subsection{Ray casting}
 
 \begin{frame}
+  \frametitle{Ray casting}
   \begin{itemize}
   \item Démonstration
   \item Très simple à implémenter
