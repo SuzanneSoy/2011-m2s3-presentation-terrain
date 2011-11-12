@@ -1,14 +1,19 @@
 \documentclass{beamer}
 \usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage[frenchb]{babel}
 \usepackage{hyperref}
+% pgf 2.10 sous ubuntu :
+% https://launchpad.net/ubuntu/precise/i386/pgf/2.10-1
+% http://launchpadlibrarian.net/70800349/pgf_2.10-1_all.deb
 \usepackage{tikz}
+\usepackage{pgfplots}
 \usetikzlibrary{shapes,positioning,snakes,calc,chains}
 \usetheme{Frankfurt}
 \usepackage{graphicx}
 
 \title{FMIN313 Moteurs de jeux\\ Génération de terrains}
-\author{DUPÉRON Georges \and\\ BONAVERO Yoann}
+\author{DUPÉRON Georges \and\texorpdfstring{\\}{} BONAVERO Yoann}
 \institute{Université Montpellier II,\\Département informatique\\Master 2 IFPRU\\Encadrants~: F. Koriche et M. Moulis}
 \date{Lundi 14 novembre 2011}
 
@@ -24,53 +29,65 @@
   \vskip0pt%
 }
 
-\AtBeginSection[] {
-  \begin{frame}
-    \frametitle{Plan}
-    \tableofcontents[currentsection]
-  \end{frame}
-  \addtocounter{framenumber}{-1}
-}
+% \AtBeginSection[] {
+%   \begin{frame}
+%     \frametitle{Plan}
+%     \tableofcontents[currentsection]
+%   \end{frame}
+%   \addtocounter{framenumber}{-1}
+% }
 
 \begin{document}
 \makeatletter\renewcommand*{\figurename}{\@gobble}\makeatother
 
-\begin{frame}
-  \titlepage
-\end{frame}
+% \begin{frame}
+%   \titlepage
+% \end{frame}
 
 % \section{Introduction}
 
 \section{Génération}
 
-\def\dohash#1#2{
-  \pgfmathsetmacro\hash{#1}
-  \pgfmathsetmacro\hashb{#2}
-  \pgfmathsetmacro\hash{mod((\hash+#1)*\hashb+0.37,1)}
-  \pgfmathsetmacro\hashb{(1+\hashb)*0.526}
-  \pgfmathsetmacro\hash{mod((\hash+#1)*\hashb+0.59,1)}
-  \pgfmathsetmacro\hashb{\hashb*0.415+42}
-  \pgfmathsetmacro\hash{mod((\hash+#1)*\hashb+0.23,1)}
-  \pgfmathsetmacro\hashb{\hashb*0.273+132}
-  \pgfmathsetmacro\hash{mod((\hash+#1*#1)*\hashb+0.78,1)}
-  \pgfmathsetmacro\hash{mod(\hash,1)}
+\pgfmathrnd
+\xdef\noiseseed{\pgfmathresult}
+
+\shorthandoff{;?:}
+\tikzset{
+  declare function={
+    hash_3(\a,\b)=Mod(\a*\a+\b,1);
+    hash_2(\a,\b)=hash_3(mod(\a*\b,1.783)+77.123,mod(\a+\b,1.843)*-0.179);
+    hash(\a,\b)=hash_2(mod(\a+\b,1.783)*0.417,mod(\a*\b,1.843)+42.56);
+    noise1D(\x)=hash(\x,\noiseseed);
+    sampleLeft(\x,\periode)=floor(\x/\periode);
+    sampleRight(\x,\periode)=floor(\x/\periode)+1;
+    sampleDelta(\x,\periode)=frac(\x/\periode);
+    linearInterpolation(\x,\a,\b)=\x*(\b-\a) + \a;
+    cosineInterpolation(\x,\a,\b)=(1-cos(\x*180))*0.5*(\b-\a) + \a;
+    octave1DLinear(\x,\periode,\amplitude)=\amplitude*linearInterpolation(sampleDelta(\x,\periode), noise1D(sampleLeft(\x,\periode)), noise1D(sampleRight(\x,\periode)));
+    octave1DCosine(\x,\periode,\amplitude)=\amplitude*cosineInterpolation(sampleDelta(\x,\periode), noise1D(sampleLeft(\x,\periode)), noise1D(sampleRight(\x,\periode)));
+    % perlin1DCosine(\x,\periode,\octaves,\persistance,\amplitude)=\lazyifthenelse{\octaves == 0}{0}{\x + perlin1DCosine(\x,\periode*0.5,\octaves-1,\persistance,\amplitude*\persistance)};
+    % recursive(\x)=\lazyifthenelse{\x == 0}{0}{\x+recursive(\x-1)}
+  }
 }
+\shorthandon{;?:}
+
 \subsection{Perlin noise}
 \begin{frame}
   \frametitle{Perlin noise}
   \begin{itemize}
-  \item Superposition d'octaves de bruit
+  \item Superposition d'octaves de bruit ($\text{seed} = \noiseseed$).
   \begin{figure}[h]
     \centering
-    \begin{tikzpicture}
-      \xdef\oldhash{0}
-      \xdef\oldi{0}
-      \foreach \i in {1,2,...,4}{
-        \dohash{\i}{0}
-        \draw[draw=blue] (\oldi,\oldhash) -- (\i,\hash);
-        \xdef\oldhash{\hash}
-        \xdef\oldi{\i}
-      }
+    \begin{tikzpicture}[scale=0.1,mark size=10]
+      \only<1->{ \path[samples at={0,16,...,64}, mark=ball] plot (\x,{octave1DLinear(\x,16,20)}); }
+      \only<2>{  \draw[samples at={0,16,...,64}]            plot (\x,{octave1DLinear(\x,16,20)}); }
+      \only<3->{ \draw[samples at={0,1,...,64}, smooth]     plot (\x,{octave1DCosine(\x,16,20)}); }
+      \only<4->{ \path[samples at={0,8,...,64}, mark=ball]  plot (\x,{20+octave1DLinear(\x,8,10)}); }
+      \only<4->{ \draw[samples at={0,1,...,64}, smooth]     plot (\x,{20+octave1DCosine(\x,8,10)}); }
+      \only<5->{ \path[samples at={0,4,...,64}, mark=ball]  plot (\x,{30+octave1DLinear(\x,4,5)}); }
+      \only<5->{ \draw[samples at={0,1,...,64}, smooth]     plot (\x,{30+octave1DCosine(\x,4,5)}); }
+      % \only<1->{ \draw[samples at={0,1,...,64}, smooth]     plot (\x,{perlin1DCosine(\x,16,2,0.5,20)}); }
+      % \only<1->{ \draw[samples at={0,1,...,64}, smooth]     plot (\x,{recursive(\x)}); }
     \end{tikzpicture}
     \caption{Perlin noise}
   \end{figure}
@@ -80,210 +97,210 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Perlin noise (Variations)}
-  \begin{itemize}
-  \item Cevernes, nuages, textures, terrains : bruit $n$D et voxels.
-  \item Ridged Perlin Noise.
-  \item Midpoint displacement.
-  \item Simplex noise : généralisation des triangles équilatéraux à $n$ dimensions, interpolation par rapport aux coins. $d^2$ au lieu de $2^d$.
-  \item Bruit répétable 1D : points sur un cercle dans un espace 2D. Généralisation à $n$ dimensions : hypercercle $n$D dans un espace $2n$D.
-	%TODO : référence
-  \end{itemize}
-\end{frame}
-
-\subsection{Craters et Hills Algorithm}
-\begin{frame}
-  \frametitle{Craters et Hills Algorithm}
-  \begin{itemize}
-  \item Craters
-    \begin{itemize}
-    \item Soustraire des cercles au terrain (z = z - f(distance au centre))
-    \item Sur un terrain nu
-	% TODO : image
-    \item Sur un terrain existant
-	% TODO : image
-    \end{itemize}
-  \item Hills Algorithm
-    \begin{itemize}
-    \item Inverse de craters : on ajoute plein de cercles
-    \end{itemize}
-  \item Stockage des cercles dans un arbre (BSP, Quadtree, arbre du LOD, \dots{}).
-  \end{itemize}
-\end{frame}
-
-\subsection{Érosion}
-
-\begin{frame}
-  \frametitle{Érosion}
-  \begin{itemize}
-  \item Déplacement de sédiments.
-  \item Taux en fonction de la pente, dureté de la roche, végétation.
-  \item Carte de circulation des eaux.
-  \item Pas temps-réel.
-  \item Approximation : modification de la distribution des hauteurs. % TODO : schéma
-  \end{itemize}
-\end{frame}
-
-\subsection{Autres}
-\begin{frame}
-  \frametitle{Autres méthodes}
-  \begin{itemize}
-  \item Chaînage d'algorithmes de bruit
-    \begin{itemize}
-    \item Ajout de couleurs, climats, végétation, relief\dots{}
-    \item Altération du comportement d'un algo.
-    \item {\tiny\url{http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}}
-    \end{itemize}
-  \item Cartes polygonales. {\tiny\url{http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}}
-	% TODO : voronoi etc.
-  \item Intégration de formes dans le terrain.
-  \end{itemize}
-\end{frame}
-
-\subsection{Rivières}
-
-\begin{frame}
-  \frametitle{Rivières}
-  \begin{itemize}
-  \item Pathfinding {\tiny\url{http://www.umbrarumregnum.net/articles/creating-rivers}}
-	% Image
-  \item Affinage du tracé en fonction du LOD.
-	% Schéma sur un ou deux niveaux d'affinage.
-  \item Tracé arbitraire.
-  \item Intégration dans le terrain.
-  \end{itemize}
-\end{frame}
-% Si on utilise une méthode de coût qui favorise de passer par un petit
-% bout de bruit plutôt que de le contourner, mais favorise le
-% contournement pour une grosse accumulation de bruit, on pourra même
-% simuler l'érosion qui efface les méandres trop petits.
-
-\subsection{Démonstration}
-\begin{frame}
-  \frametitle{Démonstration}
-  \begin{center}
-  {\Huge World machine}
-  
-  \vspace{1em}
-  \url{http://www.world-machine.com/}
-  \end{center}
-\end{frame}
-
-\section{Rendu}
-
-\subsection{Isosurfaces}
-\begin{frame}
-  \frametitle{Isosurfaces}
-  \begin{itemize}
-    \item Metaballs % TODO : écran de veille / screenshot.
-    \item Surface 2D d'un bruit 3D.
-    \item Simplification de nuages.
-    \item Surface de l'eau.
-  \end{itemize}
-\end{frame}
-
-\subsection{Ray casting}
-
-\begin{frame}
-  \frametitle{Ray casting}
-  \begin{itemize}
-  \item Très simple, très petit code.
-	% TODO : Schéma d'explication
-  \item Sampling
-  \item Très lent
-  \item Démonstration
-  \item Monte Carlo
-  \end{itemize}
-\end{frame}
-
-\section[LOD]{Niveau de détail}
-
-\subsection{ROAM}
-\begin{frame}
-  \frametitle{ROAM}
-  \begin{itemize}
-  \item Triangle bintree.
-	% TODO : Figure : triangle avec 2 fils.
-  \item Split et merge. CLOD.
-	% TODO : Figure : split forcé, merge d'un losange.
-  \item Défaut maximal visible à l'écran.
-	% TODO : Figure : Dessin projection pavé triangle erreur à l'écran.
-  \item Split queue et Merge queue.
-	% TODO : queues l'une au-dessus de l'autre, montrer qu'on va +- les priorités pour éviter le chevauchement.
-  \item Frustum culling : utilisation de drapaux.
-  \item Améliorations~:
-    \begin{itemize}
-    \item Triangle stripping.
-    \item Geomorphing.
-    \item Calcul différé des priorités dans les queues.
-    \item Temps réel.
-    \end{itemize}
-  \item $O(\text{Nb triangles mis à jour})$
-  \end{itemize}
-\end{frame}
-
-\subsection{Geometry clipmaps}
-\begin{frame}
-  \frametitle{Geometry clipmaps}
-  \begin{itemize}
-  \item Carrés concentriques avec des LOD différents.
-  \item Comme le mipmapping de textures.
-  \item Utilisation forte du GPU.
-  \item Displacement shader.
-  \item Remplissage à la jointure des LOD.
-  \end{itemize}
-\end{frame}
-
-\subsection{Notre algo}
-\begin{frame}
-  \frametitle{Notre algorithme}
-  \begin{itemize}
-  \item Quadtree de carrés.
-	% TODO : figure
-	% TODO : figure trous dans le mesh
-  \item Triangle fans.
-  \item LOD en fonction de la distance.
-  \item Mise à jour de quelques branches seulement.
-  \item Temps réel.
-  \item $O(\text{Nb triangles mis à jour})$
-  \end{itemize}
-\end{frame}
-
-\subsection{Streaming de scène}
-\begin{frame}
-  \frametitle{Streaming de scène}
-  \begin{itemize}
-  \item Modèle client/serveur.
-  \item Tiles avec LOD maximal.
-  \item Qualité progressive des tiles.
-  \item Geometry clipmaps.
-  \item \texttt{/usr/lib/xscreensaver/crackberg}
-  \end{itemize}
-\end{frame}
-
-% \section{Conclusion}
-
 % \begin{frame}
-%   \frametitle{Conclusion}
+%   \frametitle{Perlin noise (Variations)}
+%   \begin{itemize}
+%   \item Cevernes, nuages, textures, terrains : bruit $n$D et voxels.
+%   \item Ridged Perlin Noise.
+%   \item Midpoint displacement.
+%   \item Simplex noise : généralisation des triangles équilatéraux à $n$ dimensions, interpolation par rapport aux coins. $d^2$ au lieu de $2^d$.
+%   \item Bruit répétable 1D : points sur un cercle dans un espace 2D. Généralisation à $n$ dimensions : hypercercle $n$D dans un espace $2n$D.
+% 	%TODO : référence
+%   \end{itemize}
 % \end{frame}
 
-\begin{frame}
-  \frametitle{Sources}
-% Génération
-% * [Différents algos]() : Ridged Perlin Noise, Hills Algorithm, Craters, Erosion.
-% * [Plein d'algos](http://planetgenesis.sourceforge.net/docs15/noise/noise.html#tileworley) dont plusieurs basés sur une sorte de voronoi donc à priori trop lents.
-% * Affichage avec Ogre : [forum](http://www.ogre3d.org/forums/viewtopic.php?f=5&t=67177&p=442222), [doc](http://www.ogre3d.org/docs/api/html/classOgre_1_1BillboardSet.html)
-  \begin{itemize}
-  \item http://www.gamasutra.com
-  \item http://vterrain.org
-  % \item Mojoworld generator (mojoworld.org)
-  \item http://world-machine.com
-  \item Algorithmes de bruit {\tiny http://www.sluniverse.com/php/vb/project-development/34994-automatically-generated-terrain-map.html}
-  \item Composition d'algorithmes de bruit {\tiny http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}
-  \item Création de cartes polygonales {\tiny http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}
-  \item Pathfinding pour créer des rivières {\tiny http://www.umbrarumregnum.net/articles/creating-rivers}
-  \end{itemize}
-\end{frame}
+% \subsection{Craters et Hills Algorithm}
+% \begin{frame}
+%   \frametitle{Craters et Hills Algorithm}
+%   \begin{itemize}
+%   \item Craters
+%     \begin{itemize}
+%     \item Soustraire des cercles au terrain (z = z - f(distance au centre))
+%     \item Sur un terrain nu
+% 	% TODO : image
+%     \item Sur un terrain existant
+% 	% TODO : image
+%     \end{itemize}
+%   \item Hills Algorithm
+%     \begin{itemize}
+%     \item Inverse de craters : on ajoute plein de cercles
+%     \end{itemize}
+%   \item Stockage des cercles dans un arbre (BSP, Quadtree, arbre du LOD, \dots{}).
+%   \end{itemize}
+% \end{frame}
+
+% \subsection{Érosion}
+
+% \begin{frame}
+%   \frametitle{Érosion}
+%   \begin{itemize}
+%   \item Déplacement de sédiments.
+%   \item Taux en fonction de la pente, dureté de la roche, végétation.
+%   \item Carte de circulation des eaux.
+%   \item Pas temps-réel.
+%   \item Approximation : modification de la distribution des hauteurs. % TODO : schéma
+%   \end{itemize}
+% \end{frame}
+
+% \subsection{Autres}
+% \begin{frame}
+%   \frametitle{Autres méthodes}
+%   \begin{itemize}
+%   \item Chaînage d'algorithmes de bruit
+%     \begin{itemize}
+%     \item Ajout de couleurs, climats, végétation, relief\dots{}
+%     \item Altération du comportement d'un algo.
+%     \item {\tiny\url{http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}}
+%     \end{itemize}
+%   \item Cartes polygonales. {\tiny\url{http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}}
+% 	% TODO : voronoi etc.
+%   \item Intégration de formes dans le terrain.
+%   \end{itemize}
+% \end{frame}
+
+% \subsection{Rivières}
+
+% \begin{frame}
+%   \frametitle{Rivières}
+%   \begin{itemize}
+%   \item Pathfinding {\tiny\url{http://www.umbrarumregnum.net/articles/creating-rivers}}
+% 	% Image
+%   \item Affinage du tracé en fonction du LOD.
+% 	% Schéma sur un ou deux niveaux d'affinage.
+%   \item Tracé arbitraire.
+%   \item Intégration dans le terrain.
+%   \end{itemize}
+% \end{frame}
+% % Si on utilise une méthode de coût qui favorise de passer par un petit
+% % bout de bruit plutôt que de le contourner, mais favorise le
+% % contournement pour une grosse accumulation de bruit, on pourra même
+% % simuler l'érosion qui efface les méandres trop petits.
+
+% \subsection{Démonstration}
+% \begin{frame}
+%   \frametitle{Démonstration}
+%   \begin{center}
+%   {\Huge World machine}
+  
+%   \vspace{1em}
+%   \url{http://www.world-machine.com/}
+%   \end{center}
+% \end{frame}
+
+% \section{Rendu}
+
+% \subsection{Isosurfaces}
+% \begin{frame}
+%   \frametitle{Isosurfaces}
+%   \begin{itemize}
+%     \item Metaballs % TODO : écran de veille / screenshot.
+%     \item Surface 2D d'un bruit 3D.
+%     \item Simplification de nuages.
+%     \item Surface de l'eau.
+%   \end{itemize}
+% \end{frame}
+
+% \subsection{Ray casting}
+
+% \begin{frame}
+%   \frametitle{Ray casting}
+%   \begin{itemize}
+%   \item Très simple, très petit code.
+% 	% TODO : Schéma d'explication
+%   \item Sampling
+%   \item Très lent
+%   \item Démonstration
+%   \item Monte Carlo
+%   \end{itemize}
+% \end{frame}
+
+% \section[LOD]{Niveau de détail}
+
+% \subsection{ROAM}
+% \begin{frame}
+%   \frametitle{ROAM}
+%   \begin{itemize}
+%   \item Triangle bintree.
+% 	% TODO : Figure : triangle avec 2 fils.
+%   \item Split et merge. CLOD.
+% 	% TODO : Figure : split forcé, merge d'un losange.
+%   \item Défaut maximal visible à l'écran.
+% 	% TODO : Figure : Dessin projection pavé triangle erreur à l'écran.
+%   \item Split queue et Merge queue.
+% 	% TODO : queues l'une au-dessus de l'autre, montrer qu'on va +- les priorités pour éviter le chevauchement.
+%   \item Frustum culling : utilisation de drapaux.
+%   \item Améliorations~:
+%     \begin{itemize}
+%     \item Triangle stripping.
+%     \item Geomorphing.
+%     \item Calcul différé des priorités dans les queues.
+%     \item Temps réel.
+%     \end{itemize}
+%   \item $O(\text{Nb triangles mis à jour})$
+%   \end{itemize}
+% \end{frame}
+
+% \subsection{Geometry clipmaps}
+% \begin{frame}
+%   \frametitle{Geometry clipmaps}
+%   \begin{itemize}
+%   \item Carrés concentriques avec des LOD différents.
+%   \item Comme le mipmapping de textures.
+%   \item Utilisation forte du GPU.
+%   \item Displacement shader.
+%   \item Remplissage à la jointure des LOD.
+%   \end{itemize}
+% \end{frame}
+
+% \subsection{Notre algo}
+% \begin{frame}
+%   \frametitle{Notre algorithme}
+%   \begin{itemize}
+%   \item Quadtree de carrés.
+% 	% TODO : figure
+% 	% TODO : figure trous dans le mesh
+%   \item Triangle fans.
+%   \item LOD en fonction de la distance.
+%   \item Mise à jour de quelques branches seulement.
+%   \item Temps réel.
+%   \item $O(\text{Nb triangles mis à jour})$
+%   \end{itemize}
+% \end{frame}
+
+% \subsection{Streaming de scène}
+% \begin{frame}
+%   \frametitle{Streaming de scène}
+%   \begin{itemize}
+%   \item Modèle client/serveur.
+%   \item Tiles avec LOD maximal.
+%   \item Qualité progressive des tiles.
+%   \item Geometry clipmaps.
+%   \item \texttt{/usr/lib/xscreensaver/crackberg}
+%   \end{itemize}
+% \end{frame}
+
+% % \section{Conclusion}
+
+% % \begin{frame}
+% %   \frametitle{Conclusion}
+% % \end{frame}
+
+% \begin{frame}
+%   \frametitle{Sources}
+% % Génération
+% % * [Différents algos]() : Ridged Perlin Noise, Hills Algorithm, Craters, Erosion.
+% % * [Plein d'algos](http://planetgenesis.sourceforge.net/docs15/noise/noise.html#tileworley) dont plusieurs basés sur une sorte de voronoi donc à priori trop lents.
+% % * Affichage avec Ogre : [forum](http://www.ogre3d.org/forums/viewtopic.php?f=5&t=67177&p=442222), [doc](http://www.ogre3d.org/docs/api/html/classOgre_1_1BillboardSet.html)
+%   \begin{itemize}
+%   \item http://www.gamasutra.com
+%   \item http://vterrain.org
+%   % \item Mojoworld generator (mojoworld.org)
+%   \item http://world-machine.com
+%   \item Algorithmes de bruit {\tiny http://www.sluniverse.com/php/vb/project-development/34994-automatically-generated-terrain-map.html}
+%   \item Composition d'algorithmes de bruit {\tiny http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}
+%   \item Création de cartes polygonales {\tiny http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}
+%   \item Pathfinding pour créer des rivières {\tiny http://www.umbrarumregnum.net/articles/creating-rivers}
+%   \end{itemize}
+% \end{frame}
 
 \end{document}
