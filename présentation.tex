@@ -1,10 +1,12 @@
 \documentclass[hyperref={pdfpagelabels=false}]{beamer}
+% ATTENTION : modifier /usr/share/texmf/web2c/texmf.cnf : chercher la ligne qui commence par main_memory (sans %) et mettre la valeur 30000000
 % hyperref and lmodern : http://texblog.net/latex-archive/presentations/beamer-warnings/
 \usepackage{lmodern}
-\usepackage[utf8]{inputenc}
-\DeclareUnicodeCharacter{B0}{\textdegree}% °
-\DeclareUnicodeCharacter{2264}{\leq}% ≤
-\DeclareUnicodeCharacter{2265}{\geq}% ≥
+\renewcommand\mathfamilydefault{\rmdefault}
+% \usepackage[utf8]{inputenc}
+% \DeclareUnicodeCharacter{B0}{\textdegree}% °
+% \DeclareUnicodeCharacter{2264}{\leq}% ≤
+% \DeclareUnicodeCharacter{2265}{\geq}% ≥
 \usepackage[T1]{fontenc}
 \usepackage[frenchb]{babel}
 \usepackage{hyperref}
@@ -16,7 +18,7 @@
 \usetheme{Frankfurt}
 \usepackage{graphicx}
 
-\title{FMIN313 Moteurs de jeux\\ Génération de terrains}
+% \title{FMIN313 Moteurs de jeux\\ Génération de terrains}
 \author{DUPÉRON Georges \and\texorpdfstring{\\}{} BONAVERO Yoann}
 \institute{Université Montpellier II,\\Département informatique\\Master 2 IFPRU\\Encadrants~: F. Koriche et M. Moulis}
 \date{Lundi 14 novembre 2011}
@@ -91,11 +93,12 @@
     perlin1DCosine(\x,\periode,\octaves,\persistance,\amplitude)=perlin1DCosine_(\x,0,\periode,\octaves,\persistance,\amplitude);
     % Using cubic interpolation
     octave1DCubic(\x,\octave,\periode,\amplitude)=\amplitude*cubicInterpolation(sampleDelta(\x,\periode), sampleLeftLeft(\x,\periode,\octave), sampleLeft(\x,\periode,\octave), sampleRight(\x,\periode,\octave), sampleRightRight(\x,\periode,\octave));
+    % Craters
+    sqdistance_(\dx,\dy)=\dx*\dx+\dy*\dy;
+    sqdistance(\x,\y,\cx,\cy)=sqdistance_(\x-\cx,\y-\cy);
   }
 }
 \shorthandon{;?:}
-
-\def\foo#1{#1}
 
 \subsection{Perlin noise}
 \begin{frame}
@@ -179,7 +182,7 @@
         \path (0,-5*0.09) -- (0,40*0.09); % This and the 17.5*0.09 below are for vertical alignment with the other figure.
         \node[draw] (hash1) at (0,17.5*0.09) {hash};
         \node[draw,above left=of hash1, draw=blue!50] (x) {$x$};
-        \node[draw,below left=of hash1] (noctave) {n° octave};
+        \node[draw,below left=of hash1] (noctave) {n\textdegree octave};
         \draw[->] (x) -- (hash1);
         \draw[->] (noctave) -- (hash1);
         \node[draw, right=of hash1] (hash2) {hash};
@@ -203,7 +206,7 @@
 \begin{frame}
   \frametitle{Perlin noise (Variations)}
   \begin{itemize}
-  \item Cevernes, nuages, textures, terrains : bruit $n$D et voxels.
+  \item Cavernes, nuages, textures, terrains : bruit $n$D et voxels.
   \item Ridged Perlin Noise.
   \item Midpoint displacement.
   \item Simplex noise : généralisation des triangles équilatéraux à $n$ dimensions, interpolation par rapport aux coins. $d^2$ au lieu de $2^d$.
@@ -212,23 +215,97 @@
   \end{itemize}
 \end{frame}
 
+\makeatletter
+\def\getcache#1{\csname cache,#1\endcsname}
+\def\setcache#1#2{\expandafter\xdef\csname cache,#1\endcsname{#2}}
+\def\clearcache#1{\expandafter\global\expandafter\let\csname cache,#1\endcsname\@undefined}
+\def\setintmacro#1#2{\pgfmathparse{int(#2)}\edef#1{\pgfmathresult}}
+\makeatother
 \subsection{Craters et Hills Algorithm}
 \begin{frame}
   \frametitle{Craters et Hills Algorithm}
   \begin{itemize}
-  \item Craters
+  \item<1-> Craters
     \begin{itemize}
-    \item Soustraire des cercles au terrain (z = z - f(distance au centre))
-    \item Sur un terrain nu
-	% TODO : image
-    \item Sur un terrain existant
-	% TODO : image
+    \item<1-> Soustraire des cercles au terrain ({\small $z = z - f(\text{distance au centre})$})
+    \item<2-> Sur un terrain nu
+      \only<2>{
+        \begin{figure}[h]
+          \centering
+          \begin{tikzpicture}[scale=0.025]
+            \def\craterssize{128}
+            \xdef\maxv{0}
+            \def\maxradius{32}
+            \def\ncircles{50}
+            \foreach \y in {1,2,...,\craterssize}{
+              \foreach \x in {1,2,...,\craterssize}{
+                \setcache{v,\x,\y}{0}
+              }
+            }
+            \foreach \c in {1,...,\ncircles}{
+              \setintmacro{\circlex}{noise1D(\c,0)*\craterssize}
+              \setintmacro{\circley}{noise1D(\c,1)*\craterssize}
+              \setintmacro{\circler}{noise1D(\c,2)*\maxradius}
+              \message{Circle number \c/\ncircles, center (\circlex, \circley), radius \circler}
+              \foreach \dy in {-\circler,...,\circler}{
+                \setintmacro{\y}{\circley+\dy}
+                \pgfmathparse{(\y > 0) && (\y <= \craterssize)}
+                \ifnum 1=\pgfmathresult
+                \foreach \dx in {-\circler,...,\circler}{
+                  \setintmacro{\x}{\circlex+\dx}
+                  \pgfmathparse{(\x > 0) && (\x <= \craterssize)}
+                  \ifnum 1=\pgfmathresult
+                  \xdef\oldv{\getcache{v,\x,\y}}
+                  \pgfmathparse{\oldv+max(0,\circler*\circler - (\dx*\dx + \dy*\dy))}
+                  \setcache{v,\x,\y}{\pgfmathresult}
+                  \pgfmathparse{max(\maxv,\pgfmathresult)}
+                  \xdef\maxv{\pgfmathresult}
+                  \fi
+                }
+                \fi
+              }
+            }
+            \foreach \y in {1,2,...,\craterssize}{
+              \message{Gradient line \y/\craterssize...}
+              \foreach \x in {1,2,...,\craterssize}{
+                \pgfmathsetmacro{\v}{\getcache{v,\x,\y}/\maxv}
+                \definecolor{gradientpoint0}{rgb}{0,0,0.5}
+                \definecolor{gradientpoint1}{rgb}{0.2,0.2,1}
+                \definecolor{gradientpoint2}{rgb}{0.9,0.6,0.1}
+                \definecolor{gradientpoint3}{rgb}{0.1,0.6,0.2}
+                \definecolor{gradientpoint4}{rgb}{0.6,0.3,0.05}
+                \definecolor{gradientpoint5}{rgb}{1,1,1}
+                \def\positions{{0,0.3,0.4,0.88,0.94,1}}
+                \foreach \pointb in {1,...,5}{
+                  \pgfmathsetmacro{\posb}{\positions[\pointb]}
+                  \pgfmathparse{\v < \posb}
+                  \ifnum 1=\pgfmathresult
+                  \setintmacro{\pointa}{\pointb-1}
+                  \pgfmathsetmacro{\posa}{\positions[\pointa]}
+                  \pgfmathsetmacro{\mix}{100 - 100 * (\v-\posa) / (\posb-\posa)}
+                  \xdef\colora{gradientpoint\pointa}
+                  \xdef\colorb{gradientpoint\pointb}
+                  \xdef\mix{\mix}
+                  \breakforeach
+                  \fi
+                }
+                \path[fill=\colora!\mix!\colorb] (\x,\y) rectangle ++(1.2,1.2);
+                \clearcache{v,\x,\y}
+              }
+            }
+          \end{tikzpicture}
+        \end{figure}
+      }
+    \item<3-> Sur un terrain existant
+        \only<3>{
+          % TODO
+        }
     \end{itemize}
-  \item Hills Algorithm
+  \item<4-> Hills Algorithm
     \begin{itemize}
     \item Inverse de craters : on ajoute plein de cercles
     \end{itemize}
-  \item Stockage des cercles dans un arbre (BSP, Quadtree, arbre du LOD, \dots{}).
+  \item<5-> Stockage des cercles dans un arbre (BSP, Quadtree, arbre du LOD, \dots{}).
   \end{itemize}
 \end{frame}
 
@@ -266,7 +343,13 @@
     \item {\tiny\url{http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}}
     \end{itemize}
   \item Cartes polygonales. {\tiny\url{http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}}
-	% TODO : voronoi etc.
+    % TODO : images
+    % - découpage du plan en polygones
+    % - positionnement de la mer et des lacs
+    % - hauteur fonction de la distance à la mer.
+    % - tracé de rivières en descendant le long des segments des polygones.
+    % - climats et biotopes en fonction de l'élévation et de la distance à l'humidité.
+    % - bruitage supplémentaire.
   \item Intégration de formes dans le terrain.
   \end{itemize}
 \end{frame}
@@ -405,14 +488,15 @@
 % * [Plein d'algos](http://planetgenesis.sourceforge.net/docs15/noise/noise.html#tileworley) dont plusieurs basés sur une sorte de voronoi donc à priori trop lents.
 % * Affichage avec Ogre : [forum](http://www.ogre3d.org/forums/viewtopic.php?f=5&t=67177&p=442222), [doc](http://www.ogre3d.org/docs/api/html/classOgre_1_1BillboardSet.html)
   \begin{itemize}
+  \item Perlin noise {\tiny \url{http://freespace.virgin.net/hugo.elias/models/m_perlin.htm}}
   \item http://www.gamasutra.com
   \item http://vterrain.org
   % \item Mojoworld generator (mojoworld.org)
   \item http://world-machine.com
-  \item Algorithmes de bruit {\tiny http://www.sluniverse.com/php/vb/project-development/34994-automatically-generated-terrain-map.html}
-  \item Composition d'algorithmes de bruit {\tiny http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}
-  \item Création de cartes polygonales {\tiny http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}
-  \item Pathfinding pour créer des rivières {\tiny http://www.umbrarumregnum.net/articles/creating-rivers}
+  \item Algorithmes de bruit {\tiny \url{http://www.sluniverse.com/php/vb/project-development/34994-automatically-generated-terrain-map.html}}
+  \item Composition d'algorithmes de bruit {\tiny \url{http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}}
+  \item Création de cartes polygonales {\tiny \url{http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}}
+  \item Pathfinding pour créer des rivières {\tiny \url{http://www.umbrarumregnum.net/articles/creating-rivers}}
   \end{itemize}
 \end{frame}
 
