@@ -274,7 +274,7 @@
 
 
 % Génération du perlin 2D
-\xdef\twodperlinsize{64}%128
+\xdef\twodperlinsize{128}
 \xdef\maxvtwodperlin{0}
 \xdef\minvtwodperlin{0}
 \def\maxradius{32}
@@ -292,7 +292,7 @@
 }
 
 % Génération du craters
-\xdef\craterssize{64}%128
+\xdef\craterssize{128}
 \xdef\maxvcraters{0}
 \xdef\minvcraters{0}
 \def\maxradius{32}
@@ -575,18 +575,23 @@
           \message{Gradient line \y/\twodperlinsize...}
           \foreach \x in {1,2,...,\twodperlinsize}{
             \pgfmathsetmacro{\v}{(\getcache{vtwodperlin,\x,\y}-\minvtwodperlin)/max(1,\maxvtwodperlin-\minvtwodperlin)}
-            \only<6>{\pgfmathsetmacro{\v}{courbepoly(\v)}}
+            \pgfmathsetmacro{\vv}{\v}%
+            \only<6>{%
+              \pgfmathsetmacro{\vv}{courbepoly(\v)}%
+            }
             \setintmacro{\v}{max(0,min(512,int(\v*512)))}
+            \setintmacro{\vv}{max(0,min(512,int(\vv*512)))}
             \path[fill=\getcache{gradient,terrain,\v}] (\x,\y) rectangle ++(1.5,1.5);
-            \path[fill=\getcache{gradient,terrain,\v}] (300+\x,\y) rectangle ++(1.5,1.5);
+            \path[fill=\getcache{gradient,terrain,\vv}] (300+\x,\y) rectangle ++(1.5,1.5);
           }
         }
+        \only<6>{ \draw[gray!50] (150,0) -- (150+128,128); }
         \only<5>{ \draw[red, samples at={0,...,128}, smooth] plot (150+\x,\x); }
         \only<6>{ \draw[red, samples at={0,...,128}, smooth] plot (150+\x,{courbepoly(\x/128) * 128}); }
+        \draw[gray!50] (150,128) -- (150+128,128);
+        \draw[gray!50] (150+128,0) -- (150+128,128);
         \draw[->] (150,0) -- (150,128);
         \draw[->] (150,0) -- (150+128,0);
-        \draw[gray!50] (150,128) -- (150+128,128);
-        \draw[gray!50] (150,0) -- (150+128,128);
       \end{tikzpicture}
     \end{figure}
   \end{itemize}
@@ -706,10 +711,10 @@
   \end{figure}
   \begin{itemize}
   \item<1-> Très simple, très petit code.
-  \item<5-> Sampling
-  \item<6-> Très lent
-  \item<7-> Démonstration
-  \item<8-> Monte Carlo
+  \item<8-> Sampling
+  \item<9-> Très lent
+  \item<10-> Démonstration
+  \item<11-> Monte Carlo
   \end{itemize}
 \end{frame}
 
