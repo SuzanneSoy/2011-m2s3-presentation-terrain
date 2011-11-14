@@ -15,7 +15,7 @@
 % https://launchpad.net/ubuntu/precise/i386/pgf/2.10-1
 % http://launchpadlibrarian.net/70800349/pgf_2.10-1_all.deb
 \usepackage{tikz}
-\usetikzlibrary{positioning,calc,chains}
+\usetikzlibrary{positioning,calc,chains,intersections}
 \usetheme{Frankfurt}
 \usepackage{graphicx}
 
@@ -274,7 +274,7 @@
 
 
 % Génération du perlin 2D
-\xdef\twodperlinsize{8}
+\xdef\twodperlinsize{64}%128
 \xdef\maxvtwodperlin{0}
 \xdef\minvtwodperlin{0}
 \def\maxradius{32}
@@ -292,11 +292,11 @@
 }
 
 % Génération du craters
-\xdef\craterssize{4}
+\xdef\craterssize{64}%128
 \xdef\maxvcraters{0}
 \xdef\minvcraters{0}
 \def\maxradius{32}
-\def\ncircles{10}
+\def\ncircles{100}
 \foreach \y in {1,2,...,\craterssize}{
   \foreach \x in {1,2,...,\craterssize}{
     \setcache{vcraters,\x,\y}{0}
@@ -484,16 +484,16 @@
         % TODO : couleur de la map sur la ligne.
         \draw[->,gray] (\xalign+150,0) -- (\xalign+150+140,0);
         \only<2>{
-          \draw[red,samples at={0,3,...,60}, smooth, mark=*, mark indices={0,20}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
-          \draw[red,samples at={0,3,...,60}, smooth, mark=*, mark indices={0,20}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+          \draw[red,samples at={0,5,...,60}, smooth, mark=*, mark indices={1,12}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
+          \draw[red,samples at={0,5,...,60}, smooth, mark=*, mark indices={1,12}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
         }
         \only<3>{
-          \draw[red,samples at={0,3,...,360}, smooth, mark=*, mark indices={0,20,40}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
-          \draw[red,samples at={0,3,...,360}, smooth, mark=*, mark indices={0,20,40}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+          \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
+          \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
         }
         \only<4>{
-          \draw[red,samples at={0,3,...,360}, smooth, mark=*, mark indices={0,20,40}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
-          \draw[red,samples at={0,3,...,360}, smooth, mark=*, mark indices={0,20,40,140,160}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+          \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
+          \draw[red,samples at={0,5,...,720}, smooth, mark=*, mark indices={1,12,24,72,84,96}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
         }
       }
     \end{tikzpicture}
@@ -622,7 +622,7 @@
   \begin{itemize}
   \item<1-> Pathfinding {\tiny\url{http://www.umbrarumregnum.net/articles/creating-rivers}}
 	% TODO : Image (ne sera pas fait, manque de temps).
-  \item<2-4> Affinage du tracé en fonction du LOD.
+  \item<2-> Affinage du tracé en fonction du LOD.
 	% TODO : Schéma sur 3 niveaux d'affinage en 3 étapes.
   \item<5-> Tracé arbitraire.
   \item<6-> Intégration dans le terrain.
@@ -661,13 +661,55 @@
 
 \begin{frame}
   \frametitle{Ray casting}
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[scale=0.5]
+      \node[circle,fill=black,inner sep=2pt] (eye) at (0,0) {};
+      \node[coordinate] (a) at (4,-3) {};
+      \node[coordinate] (b) at (5,-1) {};
+      \node[coordinate] (c) at (6,-2) {};
+      \node[coordinate] (d) at (7,1) {};
+      \node[coordinate] (e) at (8,-3) {};
+      \draw (2,3) -- (2,-3);
+      \draw (a) -- (b) -- (c) -- (d) -- (e);
+      
+      \only<2>{ \draw[dashed] (eye) -- (e); }
+      \only<2->{
+        \path[name path=eyee] (eye) -- (e); \path[name path=verte] (2.5,3) -- (2.5,-3);
+        \draw[red!50,thick,name intersections={of=eyee and verte}] (intersection-1) -- (2.5,-3);
+      }
+
+      \only<3>{ \draw[dashed] (eye) -- (d); }
+      \only<3->{
+        \path[name path=eyed] (eye) -- (d); \path[name path=vertd] (2.4,3) -- (2.4,-3);
+        \draw[red!50,thick,name intersections={of=eyed and vertd}] (intersection-1) -- (2.4,-3);
+      }
+      
+      \only<4>{ \draw[dashed] (eye) -- (c); }
+      \only<4->{
+        \path[name path=eyed] (eye) -- (c); \path[name path=vertd] (2.3,3) -- (2.3,-3);
+        \draw[red!50,thick,name intersections={of=eyed and vertd}] (intersection-1) -- (2.3,-3);
+      }
+
+      \only<5>{ \draw[dashed] (eye) -- (b); }
+      \only<5->{
+        \path[name path=eyed] (eye) -- (b); \path[name path=vertd] (2.2,3) -- (2.2,-3);
+        \draw[red!50,thick,name intersections={of=eyed and vertd}] (intersection-1) -- (2.2,-3);
+      }
+
+      \only<6>{ \draw[dashed] (eye) -- (a); }
+      \only<6->{
+        \path[name path=eyed] (eye) -- (a); \path[name path=vertd] (2.1,3) -- (2.1,-3);
+        \draw[red!50,thick,name intersections={of=eyed and vertd}] (intersection-1) -- (2.1,-3);
+      }
+    \end{tikzpicture}
+  \end{figure}
   \begin{itemize}
-  \item Très simple, très petit code.
-	% TODO : Schéma d'explication
-  \item Sampling
-  \item Très lent
-  \item Démonstration
-  \item Monte Carlo
+  \item<1-> Très simple, très petit code.
+  \item<5-> Sampling
+  \item<6-> Très lent
+  \item<7-> Démonstration
+  \item<8-> Monte Carlo
   \end{itemize}
 \end{frame}
 
@@ -676,24 +718,48 @@
 \subsection{ROAM}
 \begin{frame}
   \frametitle{ROAM}
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[scale=0.2]
+      \path (-4,0) -- (16,8);
+      \only<2-5> { \fill[red!20] (0,0) -- (-4,0) -- (-4,4) -- cycle; }
+      \only<7> { \fill[red!20] (0,0) -- (-4,0) -- (-4,4) -- (0,4) -- cycle; }
+      \only<1->{
+        \draw (0,0) -- (16,0) -- (8,8) -- cycle;
+        \draw (8,0) -- (8,8);
+      }
+      \only<2-> {
+        \draw (0,0) -- (0,8) -- (8,8);
+        \draw (0,0) -- (-4,4) -- (0,8);
+        \draw (0,0) -- (-4,0) -- (-4,4);
+      }
+      \only<3-5> { \draw[dashed] (-4,0) -- (0,4); }
+      \only<4-5> { \draw[dashed] (-4,4) -- (4,4); }
+      \only<5-5> { \draw[dashed] (0,8) -- (8,0); }
+      
+      \only<6-7> {
+        \draw (-4,0) -- (0,4);
+        \draw (-4,4) -- (4,4);
+        \draw (0,8) -- (8,0);
+      }
+    \end{tikzpicture}
+  \end{figure}
   \begin{itemize}
-  \item Triangle bintree.
-	% TODO : Figure : triangle avec 2 fils.
-  \item Split et merge. CLOD.
-	% TODO : Figure : split forcé, merge d'un losange.
-  \item Défaut maximal visible à l'écran.
+  \item<1-> Triangle bintree.
+  \item<2-> Split et merge. CLOD.
+  \item<8-> Défaut maximal visible à l'écran.
 	% TODO : Figure : Dessin projection pavé triangle erreur à l'écran.
-  \item Split queue et Merge queue.
+  \item<9-> Split queue et Merge queue.
 	% TODO : queues l'une au-dessus de l'autre, montrer qu'on va +- les priorités pour éviter le chevauchement.
-  \item Frustum culling : utilisation de drapaux.
-  \item Améliorations~:
+  \item<10-> Frustum culling : utilisation de drapaux.
+  \item<11-> Améliorations~:
     \begin{itemize}
     \item Triangle stripping.
     \item Geomorphing.
     \item Calcul différé des priorités dans les queues.
     \item Temps réel.
     \end{itemize}
-  \item $O(\text{Nb triangles mis à jour})$
+  \item<12-> $O(\text{Nb triangles mis à jour})$
   \end{itemize}
 \end{frame}
 
@@ -712,10 +778,66 @@
 \subsection{Notre algo}
 \begin{frame}
   \frametitle{Notre algorithme}
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[scale=0.2]
+      \only<5->{
+        \draw[red] (4,4) -- (0,0);
+        \draw[red] (4,4) -- (8,0);
+        \draw[red] (4,4) -- (8,8);
+        \draw[red] (4,4) -- (4,8);
+        \draw[red] (4,4) -- (2,8);
+        \draw[red] (4,4) -- (0,8);
+      }
+      \only<1->{
+        \node[circle,fill=black,inner sep=1pt] at (0,0) {};
+        \node[circle,fill=black,inner sep=1pt] at (16,0) {};
+        \node[circle,fill=black,inner sep=1pt] at (16,16) {};
+        \node[circle,fill=black,inner sep=1pt] at (0,16) {};
+        \node[circle,fill=black,inner sep=1pt] at (8,8) {};
+        \draw (0,0) -- (16,0) -- (16,16) -- (0,16) -- cycle;
+      }
+      \only<2->{
+        \node[circle,fill=black,inner sep=1pt] at (8,0) {};
+        \node[circle,fill=black,inner sep=1pt] at (8,16) {};
+        \node[circle,fill=black,inner sep=1pt] at (0,8) {};
+        \node[circle,fill=black,inner sep=1pt] at (16,8) {};
+        
+        \node[circle,fill=black,inner sep=1pt] at (4,4) {};
+        \node[circle,fill=black,inner sep=1pt] at (4,12) {};
+        \node[circle,fill=black,inner sep=1pt] at (12,4) {};
+        \node[circle,fill=black,inner sep=1pt] at (12,12) {};
+        \draw (8,0) -- (8,16); \draw (0,8) -- (16,8);
+      }
+      \only<3->{
+        \node[circle,fill=black,inner sep=1pt] at (0,12) {};
+        \node[circle,fill=black,inner sep=1pt] at (8,12) {};
+        \node[circle,fill=black,inner sep=1pt] at (4,8) {};
+        \node[circle,fill=black,inner sep=1pt] at (4,16) {};
+        
+        \node[circle,fill=black,inner sep=1pt] at (2,10) {};
+        \node[circle,fill=black,inner sep=1pt] at (2,14) {};
+        \node[circle,fill=black,inner sep=1pt] at (6,10) {};
+        \node[circle,fill=black,inner sep=1pt] at (6,14) {};
+        \draw (0,12) -- (8,12); \draw (4,8) -- (4,16);
+      }
+      \only<4->{
+        \node[circle,fill=black,inner sep=1pt] at (0,10) {};
+        \node[circle,fill=black,inner sep=1pt] at (4,10) {};
+        \node[circle,fill=black,inner sep=1pt] at (2,12) {};
+        
+        \node[circle,fill=black,inner sep=1pt] at (1,9) {};
+        \node[circle,fill=black,inner sep=1pt] at (3,11) {};
+        \node[circle,fill=black,inner sep=1pt] at (1,11) {};
+        \node[circle,fill=black,inner sep=1pt] at (3,9) {};
+        \draw (0,10) -- (4,10); \draw (2,8) -- (2,12);
+        
+        \node[circle,fill=red,inner sep=1pt] at (2,8) {};
+      }
+    \end{tikzpicture}
+  \end{figure}
   \begin{itemize}
   \item Quadtree de carrés.
-	% TODO : figure
-	% TODO : figure trous dans le mesh
   \item Triangle fans.
   \item LOD en fonction de la distance.
   \item Mise à jour de quelques branches seulement.
