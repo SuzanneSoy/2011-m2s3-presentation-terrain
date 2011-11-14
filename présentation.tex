@@ -114,6 +114,9 @@
     );
     perlin2DCosine_(\x,\y,\octave,\periode,\octaves,\persistance,\amplitude)=lazyifthenelse(\octave >= \octaves, 0, "octave2DCosine(\x,\y,\octave,\periode,\amplitude) + perlin2DCosine_(\x,\y,\octave+1,\periode*0.5,\octaves,\persistance,\amplitude*\persistance)");
     perlin2DCosine(\x,\y,\periode,\octaves,\persistance,\amplitude)=perlin2DCosine_(\x,\y,0,\periode,\octaves,\persistance,\amplitude);
+    xpointoncircle(\t,\circler,\maxdiam)=1 + \maxdiam/2 + cos(\t)*\circler;
+    ypointoncircle(\t,\circler,\maxdiam)=1 + \maxdiam/2 + sin(\t)*\circler;
+    courbepoly(\x)=(((-12.5*\x + 26.25) * \x -16) * \x + 3.25)*\x;
   }
 }
 \shorthandon{;?:}
@@ -221,380 +224,336 @@
   \end{itemize}
 \end{frame}
 
+% Macro pour la génération de dégradés.
+\def\gengradient#1{
+  \xdef\pointa{0}
+  \xdef\pointb{1}
+  \pgfmathsetmacro{\posa}{\csname positions#1\endcsname[\pointa]}\xdef\posa{\posa}
+  \pgfmathsetmacro{\posb}{\csname positions#1\endcsname[\pointb]}\xdef\posb{\posb}
+  \foreach \x in {0,...,512}{
+    \pgfmathsetmacro{\v}{max(0,min(1,\x/512))}
+    
+    \pgfmathparse{\v > \posb}
+    \ifnum 1=\pgfmathresult
+    \xdef\pointa{\pointb}
+    \xdef\posa{\posb}
+    \setintmacro{\pointb}{\pointb+1}\xdef\pointb{\pointb}
+    \pgfmathsetmacro{\posb}{\csname positions#1\endcsname[\pointb]}\xdef\posb{\posb}
+    \fi
+    
+    \pgfmathsetmacro{\mix}{100 - 100 * (\v-\posa) / (\posb-\posa)}
+    \setcache{gradient,#1,\x}{gradient#1\pointa!\mix!gradient#1\pointb}
+  }
+}
+
+% Génération du dégradé "terrain"
+\definecolor{gradientterrain0}{rgb}{0,0,0.5}
+\definecolor{gradientterrain1}{rgb}{0.2,0.2,1}
+\definecolor{gradientterrain2}{rgb}{0.9,0.6,0.1}
+\definecolor{gradientterrain3}{rgb}{0.1,0.6,0.2}
+\definecolor{gradientterrain4}{rgb}{0.6,0.3,0.05}
+\definecolor{gradientterrain5}{rgb}{1,1,1}
+\def\positionsterrain{{0,0.3,0.4,0.88,0.94,1}}
+\gengradient{terrain}
+
+\definecolor{gradientnuage0}{rgb}{0,0,1}
+\definecolor{gradientnuage1}{rgb}{0,0.3,1}
+\definecolor{gradientnuage2}{rgb}{0.7,0.7,1}
+\definecolor{gradientnuage3}{rgb}{1,1,1}
+\def\positionsnuage{{0,0.1,0.9,1}}
+\gengradient{nuage}
+
+\definecolor{gradientmarbre0}{rgb}{1,1,1}
+\definecolor{gradientmarbre1}{rgb}{0.6,0.3,0.05} % rose
+\definecolor{gradientmarbre2}{rgb}{1,0.95,0.8} % beige/gris
+\definecolor{gradientmarbre3}{rgb}{0.8,0.7,0.4} % beige/gris
+\definecolor{gradientmarbre4}{rgb}{0.5,0.5,0.5} % gris
+\definecolor{gradientmarbre5}{rgb}{0,0,0} % noir
+\def\positionsmarbre{{0,0.4,0.6,0.88,0.96,1}}
+\gengradient{marbre}
+
+
+% Génération du perlin 2D
+\xdef\twodperlinsize{8}
+\xdef\maxvtwodperlin{0}
+\xdef\minvtwodperlin{0}
+\def\maxradius{32}
+\def\ncircles{10}
+\foreach \y in {1,2,...,\twodperlinsize}{
+  \message{Perlin 2D line \y/\twodperlinsize.}
+  \foreach \x in {1,2,...,\twodperlinsize}{
+    \pgfmathsetmacro{\v}{-perlin2DCosine(\x,\y,16,3,0.5,50)}
+    \setcache{vtwodperlin,\x,\y}{\v}
+    \pgfmathparse{max(\maxvtwodperlin,\v)}
+    \xdef\maxvtwodperlin{\pgfmathresult}
+    \pgfmathparse{min(\minvtwodperlin,\v)}
+    \xdef\minvtwodperlin{\pgfmathresult}
+  }
+}
+
+% Génération du craters
+\xdef\craterssize{4}
+\xdef\maxvcraters{0}
+\xdef\minvcraters{0}
+\def\maxradius{32}
+\def\ncircles{10}
+\foreach \y in {1,2,...,\craterssize}{
+  \foreach \x in {1,2,...,\craterssize}{
+    \setcache{vcraters,\x,\y}{0}
+  }
+}
+\foreach \c in {1,...,\ncircles}{
+  \setintmacro{\circlex}{noise1D(\c,0)*\craterssize}
+  \setintmacro{\circley}{noise1D(\c,1)*\craterssize}
+  \setintmacro{\circler}{1+noise1D(\c,2)*\maxradius}
+  \message{Circle number \c/\ncircles, center (\circlex, \circley), radius \circler}
+  \foreach \dy in {-\circler,...,\circler}{
+    \setintmacro{\y}{\circley+\dy}
+    \pgfmathparse{(\y > 0) && (\y <= \craterssize)}
+    \ifnum 1=\pgfmathresult
+    \foreach \dx in {-\circler,...,\circler}{
+      \setintmacro{\x}{\circlex+\dx}
+      \pgfmathparse{(\x > 0) && (\x <= \craterssize)}
+      \ifnum 1=\pgfmathresult
+      \xdef\oldv{\getcache{vcraters,\x,\y}}
+      \pgfmathsetmacro{\v}{\oldv - max(0,\circler - ((\dx*\dx + \dy*\dy)/\circler))}
+      \setcache{vcraters,\x,\y}{\v}
+      \pgfmathparse{max(\maxvcraters,\v)}
+      \xdef\maxvcraters{\pgfmathresult}
+      \pgfmathparse{min(\minvcraters,\v)}
+      \xdef\minvcraters{\pgfmathresult}
+      \fi
+    }
+    \fi
+  }
+}
+
+% Génération du perlin + craters
+\xdef\cratersperlinsize{\twodperlinsize}
+\xdef\maxvcratersperlin{\maxvtwodperlin}
+\xdef\minvcratersperlin{\minvtwodperlin}
+\def\maxradius{32}
+\def\ncircles{20}
+\foreach \y in {1,2,...,\cratersperlinsize}{
+  \foreach \x in {1,2,...,\cratersperlinsize}{
+    \setcache{vcratersperlin,\x,\y}{\getcache{vtwodperlin,\x,\y}}
+  }
+}
+\foreach \c in {1,...,\ncircles}{
+  \setintmacro{\circlex}{noise1D(\c,0)*\cratersperlinsize}
+  \setintmacro{\circley}{noise1D(\c,1)*\cratersperlinsize}
+  \setintmacro{\circler}{1+noise1D(\c,2)*\maxradius}
+  \message{Circle number \c/\ncircles, center (\circlex, \circley), radius \circler}
+  \foreach \dy in {-\circler,...,\circler}{
+    \setintmacro{\y}{\circley+\dy}
+    \pgfmathparse{(\y > 0) && (\y <= \cratersperlinsize)}
+    \ifnum 1=\pgfmathresult
+    \foreach \dx in {-\circler,...,\circler}{
+      \setintmacro{\x}{\circlex+\dx}
+      \pgfmathparse{(\x > 0) && (\x <= \cratersperlinsize)}
+      \ifnum 1=\pgfmathresult
+      \xdef\oldv{\getcache{vcratersperlin,\x,\y}}
+      \pgfmathparse{\oldv - max(0,\circler - ((\dx*\dx + \dy*\dy)/\circler))}
+      \setcache{vcratersperlin,\x,\y}{\pgfmathresult}
+      \pgfmathparse{max(\maxvcratersperlin,\pgfmathresult)}
+      \xdef\maxvcratersperlin{\pgfmathresult}
+      \pgfmathparse{min(\minvcratersperlin,\pgfmathresult)}
+      \xdef\minvcratersperlin{\pgfmathresult}
+      \fi
+    }
+    \fi
+  }
+}
+
 \begin{frame}
   \frametitle{Perlin noise (Variations)}
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[scale=0.025]
+      \path (300,0) ++(128,128) ++(1.5,1.5) rectangle (0,0);
+      \only<1-5>{
+        \foreach \y in {1,2,...,\twodperlinsize}{
+          \message{Gradient line \y/\twodperlinsize...}
+          \foreach \x in {1,2,...,\twodperlinsize}{
+            \pgfmathsetmacro{\v}{(\getcache{vtwodperlin,\x,\y}-\minvtwodperlin)/max(1,\maxvtwodperlin-\minvtwodperlin)}
+            \only<5>{ \pgfmathsetmacro{\v}{1-2*abs(\v-0.5)} }
+            \setintmacro{\v}{max(0,min(512,int(\v*512)))}
+            \only<2-5>{ \path[fill=\getcache{gradient,nuage,\v}] (\x,\y) rectangle ++(1.5,1.5); }
+            \only<3-5>{ \path[fill=\getcache{gradient,marbre,\v}] (150+\x,\y) rectangle ++(1.5,1.5); }
+            \only<4-5>{ \path[fill=\getcache{gradient,terrain,\v}] (300+\x,\y) rectangle ++(1.5,1.5); }
+          }
+        }
+      }
+      \only<6-8>{
+        \node[coordinate] (p0) at (150,64) {};
+        \node[coordinate] (p8) at (150+128,64) {};
+        
+        \node[coordinate] (m4) at ($ .5*(p0) + .5*(p8) $) {};
+        \node[coordinate] (p4) at ($ (m4) + (0,{noise1D(64,0)*64-32}) $) {};
+        
+        \node[coordinate] (m2) at ($ .5*(p0) + .5*(p4) $) {};
+        \node[coordinate] (p2) at ($ (m2) + (0,{noise1D(32,0)*32-16}) $) {};
+        \node[coordinate] (m6) at ($ .5*(p4) + .5*(p8) $) {};
+        \node[coordinate] (p6) at ($ (m6) + (0,{noise1D(96,0)*32-16}) $) {};
+
+        \node[coordinate] (m1) at ($ .5*(p0) + .5*(p2) $) {};
+        \node[coordinate] (p1) at ($ (m1) + (0,{noise1D(16,0)*16-8}) $) {};
+        \node[coordinate] (m3) at ($ .5*(p2) + .5*(p4) $) {};
+        \node[coordinate] (p3) at ($ (m3) + (0,{noise1D(48,0)*16-8}) $) {};
+        \node[coordinate] (m5) at ($ .5*(p4) + .5*(p6) $) {};
+        \node[coordinate] (p5) at ($ (m5) + (0,{noise1D(80,0)*16-8}) $) {};
+        \node[coordinate] (m7) at ($ .5*(p6) + .5*(p8) $) {};
+        \node[coordinate] (p7) at ($ (m7) + (0,{noise1D(112,0)*16-8}) $) {};
+      }
+      \tikzset{shortdash/.style={dash pattern=on 1pt off 1pt}}
+      \only<6>{
+        \draw[gray!50] (p0) -- (p8);
+        \draw[shortdash,gray] (p4) -- (m4);
+        \draw (p0) -- (p4) -- (p8);
+      }
+      \only<7>{
+        \draw[gray!25] (p0) -- (p8);
+        \draw[gray!50] (p0) -- (p4) -- (p8);
+        \draw[shortdash,gray] (p2) -- (m2);
+        \draw[shortdash,gray] (p6) -- (m6);
+        \draw (p0) -- (p2) -- (p4) -- (p6) -- (p8);
+      }
+      \only<8>{
+        \draw[gray!12.5] (p0) -- (p8);
+        \draw[gray!25] (p0) -- (p4) -- (p8);
+        \draw[gray!50] (p0) -- (p2) -- (p4) -- (p6) -- (p8);
+        \draw[shortdash,gray] (p1) -- (m1);
+        \draw[shortdash,gray] (p3) -- (m3);
+        \draw[shortdash,gray] (p5) -- (m5);
+        \draw[shortdash,gray] (p7) -- (m7);
+        \draw (p0) -- (p1) -- (p2) -- (p3) -- (p4) -- (p5) -- (p6) -- (p7) -- (p8);
+      }
+    \end{tikzpicture}
+  \end{figure}
   \begin{itemize}
   \item<1-> Bruit $n$D et voxels~: cavernes\only<2->{, nuages}\only<3->{, textures}\only<4->{, terrains.}
-    \only<2>{
-      \begin{figure}[h]
-        \centering
-        \begin{tikzpicture}[scale=0.025]
-          \xdef\twodperlinsize{64}
-          \xdef\maxvtwodperlin{0}
-          \xdef\minvtwodperlin{0}
-          \def\maxradius{32}
-          \def\ncircles{10}
-          \foreach \y in {1,2,...,\twodperlinsize}{
-            \message{Perlin 2D line \y/\twodperlinsize.}
-            \foreach \x in {1,2,...,\twodperlinsize}{
-              \pgfmathsetmacro{\v}{-perlin2DCosine(\x,\y,16,3,0.5,50}
-              \setcache{vtwodperlin,\x,\y}{\v}
-              \pgfmathparse{max(\maxvtwodperlin,\v)}
-              \xdef\maxvtwodperlin{\pgfmathresult}
-              \pgfmathparse{min(\minvtwodperlin,\v)}
-              \xdef\minvtwodperlin{\pgfmathresult}
-            }
-          }
-          \definecolor{gradientpoint0}{rgb}{0,0,1}
-          \definecolor{gradientpoint1}{rgb}{0,0.3,1}
-          \definecolor{gradientpoint2}{rgb}{0.3,0.3,1}
-          \definecolor{gradientpoint3}{rgb}{1,1,1}
-          \def\positions{{0,0.1,0.9,1}}
-          \foreach \y in {1,2,...,\twodperlinsize}{
-            \message{Gradient line \y/\twodperlinsize...}
-            \foreach \x in {1,2,...,\twodperlinsize}{
-              \pgfmathsetmacro{\v}{(\getcache{vtwodperlin,\x,\y}-\minvtwodperlin)/max(1,\maxvtwodperlin-\minvtwodperlin)}
-              \pgfmathsetmacro{\v}{max(0,min(1,\v))}
-              \foreach \pointb in {1,...,3}{
-                \pgfmathsetmacro{\posb}{\positions[\pointb]}
-                \pgfmathparse{\v <= \posb}
-                \ifnum 1=\pgfmathresult
-                \setintmacro{\pointa}{\pointb-1}
-                \pgfmathsetmacro{\posa}{\positions[\pointa]}
-                \pgfmathsetmacro{\mix}{100 - 100 * (\v-\posa) / (\posb-\posa)}
-                \xdef\colora{gradientpoint\pointa}
-                \xdef\colorb{gradientpoint\pointb}
-                \xdef\mix{\mix}
-                \breakforeach
-                \fi
-              }
-              \path[fill=\colora!\mix!\colorb] (\x,\y) rectangle ++(1.5,1.5);
-            }
-          }
-        \end{tikzpicture}
-      \end{figure}
-    }
-    \only<3>{
-      \begin{figure}[h]
-        \centering
-        \begin{tikzpicture}[scale=0.025]
-          \definecolor{gradientpoint0}{rgb}{0,0,0.5}
-          \definecolor{gradientpoint1}{rgb}{0.2,0.2,1}
-          \definecolor{gradientpoint2}{rgb}{0.9,0.6,0.1}
-          \definecolor{gradientpoint3}{rgb}{0.1,0.6,0.2}
-          \definecolor{gradientpoint4}{rgb}{0.6,0.3,0.05}
-          \definecolor{gradientpoint5}{rgb}{1,1,1}
-          \def\positions{{0,0.3,0.4,0.88,0.94,1}}
-          \foreach \y in {1,2,...,\twodperlinsize}{
-            \message{Gradient line \y/\twodperlinsize...}
-            \foreach \x in {1,2,...,\twodperlinsize}{
-              \pgfmathsetmacro{\v}{(\getcache{vtwodperlin,\x,\y}-\minvtwodperlin)/max(1,\maxvtwodperlin-\minvtwodperlin)}
-              \pgfmathsetmacro{\v}{max(0,min(1,\v))}
-              \foreach \pointb in {1,...,5}{
-                \pgfmathsetmacro{\posb}{\positions[\pointb]}
-                \pgfmathparse{\v <= \posb}
-                \ifnum 1=\pgfmathresult
-                \setintmacro{\pointa}{\pointb-1}
-                \pgfmathsetmacro{\posa}{\positions[\pointa]}
-                \pgfmathsetmacro{\mix}{100 - 100 * (\v-\posa) / (\posb-\posa)}
-                \xdef\colora{gradientpoint\pointa}
-                \xdef\colorb{gradientpoint\pointb}
-                \xdef\mix{\mix}
-                \breakforeach
-                \fi
-              }
-              \path[fill=\colora!\mix!\colorb] (\x,\y) rectangle ++(1.5,1.5);
-            }
-          }
-        \end{tikzpicture}
-      \end{figure}
-    }
-    \only<4>{
-      \begin{figure}[h]
-        \centering
-        \begin{tikzpicture}[scale=0.025]
-          \definecolor{gradientpoint0}{rgb}{0,0,0.5}
-          \definecolor{gradientpoint1}{rgb}{0.2,0.2,1}
-          \definecolor{gradientpoint2}{rgb}{0.9,0.6,0.1}
-          \definecolor{gradientpoint3}{rgb}{0.1,0.6,0.2}
-          \definecolor{gradientpoint4}{rgb}{0.6,0.3,0.05}
-          \definecolor{gradientpoint5}{rgb}{1,1,1}
-          \def\positions{{0,0.3,0.4,0.88,0.94,1}}
-          \foreach \y in {1,2,...,\twodperlinsize}{
-            \message{Gradient line \y/\twodperlinsize...}
-            \foreach \x in {1,2,...,\twodperlinsize}{
-              \pgfmathsetmacro{\v}{(\getcache{vtwodperlin,\x,\y}-\minvtwodperlin)/max(1,\maxvtwodperlin-\minvtwodperlin)}
-              \pgfmathsetmacro{\v}{max(0,min(1,\v))}
-              \foreach \pointb in {1,...,5}{
-                \pgfmathsetmacro{\posb}{\positions[\pointb]}
-                \pgfmathparse{\v <= \posb}
-                \ifnum 1=\pgfmathresult
-                \setintmacro{\pointa}{\pointb-1}
-                \pgfmathsetmacro{\posa}{\positions[\pointa]}
-                \pgfmathsetmacro{\mix}{100 - 100 * (\v-\posa) / (\posb-\posa)}
-                \xdef\colora{gradientpoint\pointa}
-                \xdef\colorb{gradientpoint\pointb}
-                \xdef\mix{\mix}
-                \breakforeach
-                \fi
-              }
-              \path[fill=\colora!\mix!\colorb] (\x,\y) rectangle ++(1.5,1.5);
-            }
-          }
-        \end{tikzpicture}
-      \end{figure}
-    }
   \item<5-> Ridged Perlin Noise.
-    \only<5>{
-      \begin{figure}[h]
-        \centering
-        \begin{tikzpicture}[scale=0.025]
-          \definecolor{gradientpoint0}{rgb}{0,0,0.5}
-          \definecolor{gradientpoint1}{rgb}{0.2,0.2,1}
-          \definecolor{gradientpoint2}{rgb}{0.9,0.6,0.1}
-          \definecolor{gradientpoint3}{rgb}{0.1,0.6,0.2}
-          \definecolor{gradientpoint4}{rgb}{0.6,0.3,0.05}
-          \definecolor{gradientpoint5}{rgb}{1,1,1}
-          \def\positions{{0,0.3,0.4,0.88,0.94,1}}
-          \foreach \y in {1,2,...,\twodperlinsize}{
-            \message{Gradient line \y/\twodperlinsize...}
-            \foreach \x in {1,2,...,\twodperlinsize}{
-              \pgfmathsetmacro{\v}{(\getcache{vtwodperlin,\x,\y}-\minvtwodperlin)/max(1,\maxvtwodperlin-\minvtwodperlin)}
-              \pgfmathsetmacro{\v}{max(0,min(1,\v))}
-              \pgfmathsetmacro{\v}{abs(\v-0.5)*2}
-              \foreach \pointb in {1,...,5}{
-                \pgfmathsetmacro{\posb}{\positions[\pointb]}
-                \pgfmathparse{\v <= \posb}
-                \ifnum 1=\pgfmathresult
-                \setintmacro{\pointa}{\pointb-1}
-                \pgfmathsetmacro{\posa}{\positions[\pointa]}
-                \pgfmathsetmacro{\mix}{100 - 100 * (\v-\posa) / (\posb-\posa)}
-                \xdef\colora{gradientpoint\pointa}
-                \xdef\colorb{gradientpoint\pointb}
-                \xdef\mix{\mix}
-                \breakforeach
-                \fi
-              }
-              \path[fill=\colora!\mix!\colorb] (\x,\y) rectangle ++(1.5,1.5);
-            }
-          }
-        \end{tikzpicture}
-      \end{figure}
-    }
   \item<6-> Midpoint displacement.
-    \only<6-8>{
-      \begin{figure}[h]
-        \centering
-        \begin{tikzpicture}
-          % TODO : figure en 3 étapes
-        \end{tikzpicture}
-      \end{figure}
-    }
-  \item<9-> Simplex noise : généralisation des triangles équilatéraux à $n$ dimensions, interpolation par rapport aux coins. $d^2$ au lieu de $2^d$.
-  \item<10-> Bruit répétable 1D : points sur un cercle dans un espace 2D. Généralisation à $n$ dimensions : hypercercle $n$D dans un espace $2n$D.
+  \end{itemize}
+\end{frame}
+\begin{frame}
+  \frametitle{Perlin noise (Variations)}
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[scale=0.025]
+      \path (0,0) -- (0,129.5);
+      \only<1>{
+        \node[coordinate] (a) at (60:64) {};
+        \node[coordinate] (b) at (0,0) {};
+        \node[coordinate] (c) at (64,0) {};
+        \shade[shading=axis,bottom color=white,top color=gray!50,shading angle=60] (a) -- (b) -- (c) -- cycle;
+        \draw (a) -- (b) -- (c) -- cycle;
+        \node[fill=black,circle,inner sep=1pt] (p) at (20,15) {};
+        \draw[gray, densely dotted] (p) -- (a);
+        \draw[gray, densely dotted] (p) -- (b);
+        \draw[gray, densely dotted] (p) -- (c);
+        % Tétraèdre
+        \node[coordinate] (3a) at (132,{23+64*sqrt(24)/6},{64*sqrt(3)/6}) {};
+        \node[coordinate] (3b) at (100,23,0) {};
+        \node[coordinate] (3c) at (164,23,0) {};
+        \node[coordinate] (3d) at (132,23,{64*sqrt(3)/2}) {};
+        \draw (3a) -- (3b);
+        \draw (3b) -- (3d);
+        \draw (3d) -- (3a);
+        \draw (3a) -- (3c);
+        \draw (3c) -- (3d);
+        \draw[dashed] (3b) -- (3c);
+        \node[fill=black,circle,inner sep=1pt] (3p) at (135,30,30) {};
+        \draw[gray, densely dotted] (3p) -- (3a);
+        \draw[gray, densely dotted] (3p) -- (3b);
+        \draw[gray, densely dotted] (3p) -- (3c);
+        \draw[gray, densely dotted] (3p) -- (3d);
+      }
+      \only<2-4>{
+        \pgfmathsetmacro{\xalign}{164/2-128/2}
+        \pgfmathsetmacro{\circler}{\twodperlinsize*0.35}
+        \pgfmathsetmacro{\maxdiam}{\twodperlinsize}
+        \foreach \y in {1,2,...,\twodperlinsize}{
+          \message{Gradient line \y/\twodperlinsize...}
+          \foreach \x in {1,2,...,\twodperlinsize}{
+            \pgfmathsetmacro{\v}{(\getcache{vtwodperlin,\x,\y}-\minvtwodperlin)/max(1,\maxvtwodperlin-\minvtwodperlin)}
+            \setintmacro{\v}{max(0,min(512,int(\v*512)))}
+            \path[fill=\getcache{gradient,terrain,\v}] (\xalign+\x,\y) rectangle ++(1.5,1.5);
+          }
+        }
+        % TODO : couleur de la map sur la ligne.
+        \draw[->,gray] (\xalign+150,0) -- (\xalign+150+140,0);
+        \only<2>{
+          \draw[red,samples at={0,3,...,60}, smooth, mark=*, mark indices={0,20}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
+          \draw[red,samples at={0,3,...,60}, smooth, mark=*, mark indices={0,20}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+        }
+        \only<3>{
+          \draw[red,samples at={0,3,...,360}, smooth, mark=*, mark indices={0,20,40}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
+          \draw[red,samples at={0,3,...,360}, smooth, mark=*, mark indices={0,20,40}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+        }
+        \only<4>{
+          \draw[red,samples at={0,3,...,360}, smooth, mark=*, mark indices={0,20,40}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
+          \draw[red,samples at={0,3,...,360}, smooth, mark=*, mark indices={0,20,40,140,160}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+        }
+      }
+    \end{tikzpicture}
+  \end{figure}
+  \begin{itemize}
+  \item<1-> Simplex noise. $O(d^2)$ au lieu de $O(2^d)$.
+  \item<2-> Bruit répétable 1D : Cercle dans un espace 2D.\\Bruit répétable $n$D : hypercercle dans un espace $2n$D.
     {\tiny\url{http://www.gamedev.net/blog/33/entry-2138456-seamless-noise/}}
-    \only<10-12>{
-      \begin{figure}[h]
-        \centering
-        \begin{tikzpicture}
-          % TODO : figure en 3 étapes
-        \end{tikzpicture}
-      \end{figure}
-    }
   \end{itemize}
 \end{frame}
 
 \subsection{Craters et Hills Algorithm}
 \begin{frame}
-  % Création du craters
-  \xdef\craterssize{128}
-  \xdef\maxvcraters{0}
-  \xdef\minvcraters{0}
-  \def\maxradius{32}
-  \def\ncircles{100}
-  \foreach \y in {1,2,...,\craterssize}{
-    \foreach \x in {1,2,...,\craterssize}{
-      \setcache{vcraters,\x,\y}{0}
-    }
-  }
-  \foreach \c in {1,...,\ncircles}{
-    \setintmacro{\circlex}{noise1D(\c,0)*\craterssize}
-    \setintmacro{\circley}{noise1D(\c,1)*\craterssize}
-    \setintmacro{\circler}{noise1D(\c,2)*\maxradius}
-    \message{Circle number \c/\ncircles, center (\circlex, \circley), radius \circler}
-    \foreach \dy in {-\circler,...,\circler}{
-      \setintmacro{\y}{\circley+\dy}
-      \pgfmathparse{(\y > 0) && (\y <= \craterssize)}
-      \ifnum 1=\pgfmathresult
-      \foreach \dx in {-\circler,...,\circler}{
-        \setintmacro{\x}{\circlex+\dx}
-        \pgfmathparse{(\x > 0) && (\x <= \craterssize)}
-        \ifnum 1=\pgfmathresult
-        \xdef\oldv{\getcache{vcraters,\x,\y}}
-        \pgfmathsetmacro{\v}{\oldv - max(0,\circler - ((\dx*\dx + \dy*\dy)/\circler))}
-        \setcache{vcraters,\x,\y}{\v}
-        \pgfmathparse{max(\maxvcraters,\v)}
-        \xdef\maxvcraters{\pgfmathresult}
-        \pgfmathparse{min(\minvcraters,\v)}
-        \xdef\minvcraters{\pgfmathresult}
-        \fi
-      }
-      \fi
-    }
-  }
-  % Création du perlin + craters
-  \xdef\cratersperlinsize{\twodperlinsize}
-  \xdef\maxvcratersperlin{\maxvtwodperlin}
-  \xdef\minvcratersperlin{\minvtwodperlin}
-  \def\maxradius{32}
-  \def\ncircles{20}
-  \foreach \y in {1,2,...,\cratersperlinsize}{
-    \foreach \x in {1,2,...,\cratersperlinsize}{
-      \setcache{vcratersperlin,\x,\y}{\getcache{vtwodperlin,\x,\y}}
-    }
-  }
-  \foreach \c in {1,...,\ncircles}{
-    \setintmacro{\circlex}{noise1D(\c,0)*\cratersperlinsize}
-    \setintmacro{\circley}{noise1D(\c,1)*\cratersperlinsize}
-    \setintmacro{\circler}{noise1D(\c,2)*\maxradius}
-    \message{Circle number \c/\ncircles, center (\circlex, \circley), radius \circler}
-    \foreach \dy in {-\circler,...,\circler}{
-      \setintmacro{\y}{\circley+\dy}
-      \pgfmathparse{(\y > 0) && (\y <= \cratersperlinsize)}
-      \ifnum 1=\pgfmathresult
-      \foreach \dx in {-\circler,...,\circler}{
-        \setintmacro{\x}{\circlex+\dx}
-        \pgfmathparse{(\x > 0) && (\x <= \cratersperlinsize)}
-        \ifnum 1=\pgfmathresult
-        \xdef\oldv{\getcache{vcratersperlin,\x,\y}}
-        \pgfmathparse{\oldv - max(0,\circler - ((\dx*\dx + \dy*\dy)/\circler))}
-        \setcache{vcratersperlin,\x,\y}{\pgfmathresult}
-        \pgfmathparse{max(\maxvcratersperlin,\pgfmathresult)}
-        \xdef\maxvcratersperlin{\pgfmathresult}
-        \pgfmathparse{min(\minvcratersperlin,\pgfmathresult)}
-        \xdef\minvcratersperlin{\pgfmathresult}
-        \fi
-      }
-      \fi
-    }
-  }
-
   \frametitle{Craters et Hills Algorithm}
-  \only<2->{
-    \begin{figure}[h]
-      \centering
-      \begin{tikzpicture}[scale=0.025]
-        \definecolor{gradientpoint0}{rgb}{0,0,0.5}
-        \definecolor{gradientpoint1}{rgb}{0.2,0.2,1}
-        \definecolor{gradientpoint2}{rgb}{0.9,0.6,0.1}
-        \definecolor{gradientpoint3}{rgb}{0.1,0.6,0.2}
-        \definecolor{gradientpoint4}{rgb}{0.6,0.3,0.05}
-        \definecolor{gradientpoint5}{rgb}{1,1,1}
-        \def\positions{{0,0.3,0.4,0.88,0.94,1}}
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[scale=0.025]
+      \path (300,0) ++(128,128) ++(1.5,1.5) rectangle (0,0);
+      \only<2->{
         \foreach \y in {1,2,...,\craterssize}{
           \message{Gradient line \y/\craterssize...}
           \foreach \x in {1,2,...,\craterssize}{
             \pgfmathsetmacro{\v}{(\getcache{vcraters,\x,\y}-\minvcraters)/max(1,\maxvcraters-\minvcraters)}
-            \pgfmathsetmacro{\v}{max(0,min(1,\v))}
-            \foreach \pointb in {1,...,5}{
-              \pgfmathsetmacro{\posb}{\positions[\pointb]}
-              \pgfmathparse{\v < \posb}
-              \ifnum 1=\pgfmathresult
-              \setintmacro{\pointa}{\pointb-1}
-              \pgfmathsetmacro{\posa}{\positions[\pointa]}
-              \pgfmathsetmacro{\mix}{100 - 100 * (\v-\posa) / (\posb-\posa)}
-              \xdef\colora{gradientpoint\pointa}
-              \xdef\colorb{gradientpoint\pointb}
-              \xdef\mix{\mix}
-              \breakforeach
-              \fi
-            }
-            \path[fill=\colora!\mix!\colorb] (\x,\y) rectangle ++(1.5,1.5);
+            \setintmacro{\v}{max(0,min(512,int(\v*512)))}
+            \path[fill=\getcache{gradient,terrain,\v}] (\x,\y) rectangle ++(1.5,1.5);
           }
         }
-      \end{tikzpicture}
-    \end{figure}
-  }
-  \only<3->{
-    \begin{figure}[h]
-      \centering
-      \begin{tikzpicture}[scale=0.025]
-        \definecolor{gradientpoint0}{rgb}{0,0,0.5}
-        \definecolor{gradientpoint1}{rgb}{0.2,0.2,1}
-        \definecolor{gradientpoint2}{rgb}{0.9,0.6,0.1}
-        \definecolor{gradientpoint3}{rgb}{0.1,0.6,0.2}
-        \definecolor{gradientpoint4}{rgb}{0.6,0.3,0.05}
-        \definecolor{gradientpoint5}{rgb}{1,1,1}
-        \def\positions{{0,0.3,0.4,0.88,0.94,1}}
+      }
+      \only<3->{
         \foreach \y in {1,2,...,\cratersperlinsize}{
           \message{Gradient line \y/\cratersperlinsize...}
           \foreach \x in {1,2,...,\cratersperlinsize}{
             \pgfmathsetmacro{\v}{(\getcache{vcratersperlin,\x,\y}-\minvcratersperlin)/max(1,\maxvcratersperlin-\minvcratersperlin)}
-            \pgfmathsetmacro{\v}{max(0,min(1,\v))}
-            \foreach \pointb in {1,...,5}{
-              \pgfmathsetmacro{\posb}{\positions[\pointb]}
-              \pgfmathparse{\v <= \posb}
-              \ifnum 1=\pgfmathresult
-              \setintmacro{\pointa}{\pointb-1}
-              \pgfmathsetmacro{\posa}{\positions[\pointa]}
-              \pgfmathsetmacro{\mix}{100 - 100 * (\v-\posa) / (\posb-\posa)}
-              \xdef\colora{gradientpoint\pointa}
-              \xdef\colorb{gradientpoint\pointb}
-              \xdef\mix{\mix}
-              \breakforeach
-              \fi
-            }
-            \path[fill=\colora!\mix!\colorb] (\x,\y) rectangle ++(1.5,1.5);
+            \setintmacro{\v}{max(0,min(512,int(\v*512)))}
+            \path[fill=\getcache{gradient,terrain,\v}] (150+\x,\y) rectangle ++(1.5,1.5);
           }
         }
-      \end{tikzpicture}
-    \end{figure}
-  }
-  \only<4->{
-    \begin{figure}[h]
-      \centering
-      \begin{tikzpicture}[scale=0.025]
-        \definecolor{gradientpoint0}{rgb}{0,0,0.5}
-        \definecolor{gradientpoint1}{rgb}{0.2,0.2,1}
-        \definecolor{gradientpoint2}{rgb}{0.9,0.6,0.1}
-        \definecolor{gradientpoint3}{rgb}{0.1,0.6,0.2}
-        \definecolor{gradientpoint4}{rgb}{0.6,0.3,0.05}
-        \definecolor{gradientpoint5}{rgb}{1,1,1}
-        \def\positions{{0,0.3,0.4,0.88,0.94,1}}
+      }
+      \only<4->{
         \foreach \y in {1,2,...,\craterssize}{
           \message{Gradient line \y/\craterssize...}
           \foreach \x in {1,2,...,\craterssize}{
             \pgfmathsetmacro{\v}{(\getcache{vcraters,\x,\y}-\minvcraters)/max(1,\maxvcraters-\minvcraters)}
-            \pgfmathsetmacro{\v}{max(0,min(1,\v))}
-            \pgfmathsetmacro{\v}{1-\v}
-            \foreach \pointb in {1,...,5}{
-              \pgfmathsetmacro{\posb}{\positions[\pointb]}
-              \pgfmathparse{\v < \posb}
-              \ifnum 1=\pgfmathresult
-              \setintmacro{\pointa}{\pointb-1}
-              \pgfmathsetmacro{\posa}{\positions[\pointa]}
-              \pgfmathsetmacro{\mix}{100 - 100 * (\v-\posa) / (\posb-\posa)}
-              \xdef\colora{gradientpoint\pointa}
-              \xdef\colorb{gradientpoint\pointb}
-              \xdef\mix{\mix}
-              \breakforeach
-              \fi
-            }
-            \path[fill=\colora!\mix!\colorb] (\x,\y) rectangle ++(1.5,1.5);
+            \setintmacro{\v}{max(0,min(512,int(\v*512)))}
+            \setintmacro{\v}{512-\v}
+            \path[fill=\getcache{gradient,terrain,\v}] (300+\x,\y) rectangle ++(1.5,1.5);
           }
         }
-      \end{tikzpicture}
-    \end{figure}
-  }
+      }
+    \end{tikzpicture}
+  \end{figure}
   \begin{itemize}
   \item<1-> Craters
     \begin{itemize}
-    \item<1-> Soustraire des cercles au terrain ({\small $z = z - f(\text{distance au centre})$})
+    \item<1-> Soustraire des cercles au terrain {\small ($z = z - f(\text{distance au centre})$)}
     \item<2-> Sur un terrain nu
     \item<3-> Sur un terrain existant
     \end{itemize}
   \item<4-> Hills Algorithm~: ajouter des cercles
-  \item<5-> Stockage des cercles dans un arbre (BSP, Quadtree, LOD, \dots{}).
+  \item<5-> Stockage des cercles dans un arbre {\small (BSP, Quadtree, LOD, \dots{})}
   \end{itemize}
 \end{frame}
 
@@ -608,14 +567,26 @@
   \item<3-> Carte de circulation des eaux.
   \item<4-> Pas temps-réel.
   \item<5-6> Approximation : modification de la distribution des hauteurs.
-    % TODO : schéma en 2 étapes
     \begin{figure}[h]
       \centering
-      \begin{tikzpicture}
-        % Un dégradé vertical indiquant l'élévation de départ
-        % Fonction f(x) = x
-        % 2e dégradé indiquant le résultat.
-        % Même chose avec une autre fonction.
+      \begin{tikzpicture}[scale=0.025]
+        \path (300,0) ++(128,128) ++(1.5,1.5) rectangle (0,-2);
+        \foreach \y in {1,2,...,\twodperlinsize}{
+          \message{Gradient line \y/\twodperlinsize...}
+          \foreach \x in {1,2,...,\twodperlinsize}{
+            \pgfmathsetmacro{\v}{(\getcache{vtwodperlin,\x,\y}-\minvtwodperlin)/max(1,\maxvtwodperlin-\minvtwodperlin)}
+            \only<6>{\pgfmathsetmacro{\v}{courbepoly(\v)}}
+            \setintmacro{\v}{max(0,min(512,int(\v*512)))}
+            \path[fill=\getcache{gradient,terrain,\v}] (\x,\y) rectangle ++(1.5,1.5);
+            \path[fill=\getcache{gradient,terrain,\v}] (300+\x,\y) rectangle ++(1.5,1.5);
+          }
+        }
+        \only<5>{ \draw[red, samples at={0,...,128}, smooth] plot (150+\x,\x); }
+        \only<6>{ \draw[red, samples at={0,...,128}, smooth] plot (150+\x,{courbepoly(\x/128) * 128}); }
+        \draw[->] (150,0) -- (150,128);
+        \draw[->] (150,0) -- (150+128,0);
+        \draw[gray!50] (150,128) -- (150+128,128);
+        \draw[gray!50] (150,0) -- (150+128,128);
       \end{tikzpicture}
     \end{figure}
   \end{itemize}
@@ -650,9 +621,9 @@
   \frametitle{Rivières}
   \begin{itemize}
   \item<1-> Pathfinding {\tiny\url{http://www.umbrarumregnum.net/articles/creating-rivers}}
-	% Image
+	% TODO : Image (ne sera pas fait, manque de temps).
   \item<2-4> Affinage du tracé en fonction du LOD.
-	% Schéma sur 3 niveaux d'affinage en 3 étapes.
+	% TODO : Schéma sur 3 niveaux d'affinage en 3 étapes.
   \item<5-> Tracé arbitraire.
   \item<6-> Intégration dans le terrain.
   \end{itemize}
@@ -679,7 +650,7 @@
 \begin{frame}
   \frametitle{Isosurfaces}
   \begin{itemize}
-    \item Metaballs % TODO : écran de veille / screenshot.
+    \item Metaballs {\small \texttt{/usr/lib/xscreensaver/metaballs}}
     \item Surface 2D d'un bruit 3D.
     \item Simplification de nuages.
     \item Surface de l'eau.
