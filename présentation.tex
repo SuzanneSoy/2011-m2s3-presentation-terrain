@@ -1,19 +1,20 @@
 \documentclass[hyperref={pdfpagelabels=false}]{beamer}
-% ATTENTION : modifier /usr/share/texmf/web2c/texmf.cnf : chercher la ligne qui commence par main_memory (sans %) et mettre la valeur 30000000
-% hyperref and lmodern : http://texblog.net/latex-archive/presentations/beamer-warnings/
+% ATTENTION
+% modifier dans /usr/share/texmf/web2c/texmf.cnf :
+% hash_extra = 500000
+% pool_size = 12500000
+% Puis~: fmtutil --all && sudo fmtutil-sys --all
+%
+% ATTENTION
+% Nécessite pgf 2.10. Sous ubuntu, installer~:
+% http://launchpadlibrarian.net/70800349/pgf_2.10-1_all.deb
+% De la page https://launchpad.net/ubuntu/precise/i386/pgf/2.10-1
 \usepackage{lmodern}
 \usepackage{textcomp}% Babel says we should include this when using \textdegree.
 \renewcommand\mathfamilydefault{\rmdefault}
-% \usepackage[utf8]{inputenc}
-% \DeclareUnicodeCharacter{B0}{\textdegree}% °
-% \DeclareUnicodeCharacter{2264}{\leq}% ≤
-% \DeclareUnicodeCharacter{2265}{\geq}% ≥
 \usepackage[T1]{fontenc}
 \usepackage[frenchb]{babel}
 \usepackage{hyperref}
-% pgf 2.10 sous ubuntu :
-% https://launchpad.net/ubuntu/precise/i386/pgf/2.10-1
-% http://launchpadlibrarian.net/70800349/pgf_2.10-1_all.deb
 \usepackage{tikz}
 \usetikzlibrary{positioning,calc,chains,intersections}
 \usetheme{Frankfurt}
@@ -55,8 +56,9 @@
 
 \section{Génération}
 
-\pgfmathrnd
-\xdef\noiseseed{\pgfmathresult}
+% \pgfmathrnd
+% \xdef\noiseseed{\pgfmathresult}
+\xdef\noiseseed{0.99661}
 
 \makeatletter
 \def\getcache#1{\csname cache,#1\endcsname}
@@ -217,7 +219,7 @@
     % \caption{Perlin noise}
   \end{figure}
   \begin{itemize}
-  \item<1-> Superposition d'octaves de bruit ($\text{seed} = \noiseseed$).% TODO : choisir une bonne seed et virer ça.
+  \item<1-> Superposition d'octaves de bruit
   \item<7-> Interpolation\only<8->{ linéaire}\only<9->{, cubique}\only<10->{ ou cosinusoidale.}
   \item<11-> Amplitude\only<12->{, octaves}\only<13->{, fréquence}\only<14->{, persistance.}
   \item<15-> Hash de coordonnées
@@ -484,16 +486,20 @@
         % TODO : couleur de la map sur la ligne.
         \draw[->,gray] (\xalign+150,0) -- (\xalign+150+140,0);
         \only<2>{
-          \draw[red,samples at={0,5,...,60}, smooth, mark=*, mark indices={1,12}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
-          \draw[red,samples at={0,5,...,60}, smooth, mark=*, mark indices={1,12}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+          \draw[red,samples at={0,5,...,80}, smooth, mark=*, mark indices={1,12}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
+          \draw[red,samples at={0,5,...,80}, smooth, mark=*, mark indices={1,12}, mark size=72] plot ({\xalign+150+\x/360*70},{35-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
         }
         \only<3>{
-          \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
-          \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+          \draw[red,samples at={0,5,...,140}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
+          \draw[red,samples at={0,5,...,140}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+150+\x/360*70},{35-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
         }
         \only<4>{
           \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
-          \draw[red,samples at={0,5,...,720}, smooth, mark=*, mark indices={1,12,24,72,84,96}, mark size=72] plot ({\xalign+150+\x/360*70},{perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+          \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+150+\x/360*70},{35-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+        }
+        \only<5>{
+          \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
+          \draw[red,samples at={0,5,...,720}, smooth, mark=*, mark indices={1,12,24,72,84,96}, mark size=72] plot ({\xalign+150+\x/360*70},{35-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
         }
       }
     \end{tikzpicture}
@@ -629,8 +635,8 @@
 	% TODO : Image (ne sera pas fait, manque de temps).
   \item<2-> Affinage du tracé en fonction du LOD.
 	% TODO : Schéma sur 3 niveaux d'affinage en 3 étapes.
-  \item<5-> Tracé arbitraire.
-  \item<6-> Intégration dans le terrain.
+  \item<3-> Tracé arbitraire.
+  \item<4-> Intégration dans le terrain.
   \end{itemize}
 \end{frame}
 % Si on utilise une méthode de coût qui favorise de passer par un petit
@@ -713,7 +719,7 @@
   \item<1-> Très simple, très petit code.
   \item<8-> Sampling
   \item<9-> Très lent
-  \item<10-> Démonstration
+  \item<10-> Démonstration {\small \url{http://forum.osdev.org/viewtopic.php?p=170625#p170625}}
   \item<11-> Monte Carlo
   \end{itemize}
 \end{frame}
@@ -764,7 +770,7 @@
     \item Calcul différé des priorités dans les queues.
     \item Temps réel.
     \end{itemize}
-  \item<12-> $O(\text{Nb triangles mis à jour})$
+  \item<12-> $\tilde O(\text{Nb triangles mis à jour})$
   \end{itemize}
 \end{frame}
 
@@ -847,7 +853,7 @@
   \item LOD en fonction de la distance.
   \item Mise à jour de quelques branches seulement.
   \item Temps réel.
-  \item $O(\text{Nb triangles mis à jour})$
+  \item $\tilde O(\text{Nb carrés mis à jour})$
   \end{itemize}
 \end{frame}
 
@@ -885,6 +891,14 @@
   \item Composition d'algorithmes de bruit {\tiny \url{http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}}
   \item Création de cartes polygonales {\tiny \url{http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}}
   \item Pathfinding pour créer des rivières {\tiny \url{http://www.umbrarumregnum.net/articles/creating-rivers}}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{À propos}
+  \begin{itemize}
+  \item Utilise pgf/tikz 2.10% TODO : url.
+  \item Graine aléatoire~: \noiseseed
   \end{itemize}
 \end{frame}
 
