@@ -11,7 +11,7 @@
 % De la page https://launchpad.net/ubuntu/precise/i386/pgf/2.10-1
 \usepackage{lmodern}
 \usepackage{textcomp}% Babel says we should include this when using \textdegree.
-\renewcommand\mathfamilydefault{\rmdefault}
+\usefonttheme{professionalfonts}
 \usepackage[T1]{fontenc}
 \usepackage[frenchb]{babel}
 \usepackage{hyperref}
@@ -22,7 +22,7 @@
 
 \title{FMIN313 Moteurs de jeux\\ Génération de terrains}
 \author{DUPÉRON Georges \and\texorpdfstring{\\}{} BONAVERO Yoann}
-\institute{Université Montpellier II,\\Département informatique\\Master 2 IFPRU\\Encadrants~: F. Koriche et M. Moulis}
+\institute{Université Montpellier II,\\Département informatique,\\Master 2 IFPRU\\Encadrants~: F. Koriche et M. Moulis}
 \date{Lundi 14 novembre 2011}
 
 \defbeamertemplate*{footline}{shadow theme}
@@ -219,10 +219,10 @@
     % \caption{Perlin noise}
   \end{figure}
   \begin{itemize}
-  \item<1-> Superposition d'octaves de bruit
+  \item<1-> Superposition d'octaves de bruit.
   \item<7-> Interpolation\only<8->{ linéaire}\only<9->{, cubique}\only<10->{ ou cosinusoidale.}
   \item<11-> Amplitude\only<12->{, octaves}\only<13->{, fréquence}\only<14->{, persistance.}
-  \item<15-> Hash de coordonnées
+  \item<15-> Hash de coordonnées.
   \end{itemize}
 \end{frame}
 
@@ -438,6 +438,7 @@
   \item<6-> Midpoint displacement.
   \end{itemize}
 \end{frame}
+
 \begin{frame}
   \frametitle{Perlin noise (Variations)}
   \begin{figure}[h]
@@ -471,7 +472,7 @@
         \draw[gray, densely dotted] (3p) -- (3c);
         \draw[gray, densely dotted] (3p) -- (3d);
       }
-      \only<2-4>{
+      \only<2->{
         \pgfmathsetmacro{\xalign}{164/2-128/2}
         \pgfmathsetmacro{\circler}{\twodperlinsize*0.35}
         \pgfmathsetmacro{\maxdiam}{\twodperlinsize}
@@ -487,19 +488,19 @@
         \draw[->,gray] (\xalign+150,0) -- (\xalign+150+140,0);
         \only<2>{
           \draw[red,samples at={0,5,...,80}, smooth, mark=*, mark indices={1,12}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
-          \draw[red,samples at={0,5,...,80}, smooth, mark=*, mark indices={1,12}, mark size=72] plot ({\xalign+150+\x/360*70},{35-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+          \draw[red,samples at={0,5,...,80}, smooth, mark=*, mark indices={1,12}, mark size=72] plot ({\xalign+150+\x/360*70},{105-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,60)});
         }
         \only<3>{
           \draw[red,samples at={0,5,...,140}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
-          \draw[red,samples at={0,5,...,140}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+150+\x/360*70},{35-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+          \draw[red,samples at={0,5,...,140}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+150+\x/360*70},{105-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,60)});
         }
         \only<4>{
           \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
-          \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+150+\x/360*70},{35-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+          \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+150+\x/360*70},{105-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,60)});
         }
         \only<5>{
           \draw[red,samples at={0,5,...,360}, smooth, mark=*, mark indices={1,12,24}, mark size=72] plot ({\xalign+xpointoncircle(\x,\circler,\maxdiam)},{ypointoncircle(\x,\circler,\maxdiam)});
-          \draw[red,samples at={0,5,...,720}, smooth, mark=*, mark indices={1,12,24,72,84,96}, mark size=72] plot ({\xalign+150+\x/360*70},{35-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,35)});
+          \draw[red,samples at={0,5,...,720}, smooth, mark=*, mark indices={1,12,24,72,84,96}, mark size=72] plot ({\xalign+150+\x/360*70},{105-perlin2DCosine(xpointoncircle(\x,\circler,\maxdiam),ypointoncircle(\x,\circler,\maxdiam),16,3,0.5,60)});
         }
       }
     \end{tikzpicture}
@@ -554,12 +555,12 @@
   \begin{itemize}
   \item<1-> Craters
     \begin{itemize}
-    \item<1-> Soustraire des cercles au terrain {\small ($z = z - f(\text{distance au centre})$)}
-    \item<2-> Sur un terrain nu
-    \item<3-> Sur un terrain existant
+    \item<1-> Soustraire des cercles au terrain. {\small ($z = z - f(\text{distance au centre})$)}
+    \item<2-> Sur un terrain nu.
+    \item<3-> Sur un terrain existant.
     \end{itemize}
-  \item<4-> Hills Algorithm~: ajouter des cercles
-  \item<5-> Stockage des cercles dans un arbre {\small (BSP, Quadtree, LOD, \dots{})}
+  \item<4-> Hills Algorithm~: ajouter des cercles.
+  \item<5-> Stockage des cercles dans un arbre {\small (BSP, Quadtree, LOD, \dots{})}.
   \end{itemize}
 \end{frame}
 
@@ -607,11 +608,11 @@
 \begin{frame}
   \frametitle{Autres méthodes}
   \begin{itemize}
-  \item<1-> Chaînage d'algorithmes de bruit
+  \item<1-> Chaînage d'algorithmes de bruit~:
     \begin{itemize}
     \item Ajout de couleurs, climats, végétation, relief\dots{}
     \item Altération du comportement d'un algo.
-    \item {\tiny\url{http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}}
+    \item[] {\tiny\url{http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}}
     \end{itemize}
   \item<2-> Cartes polygonales. {\tiny\url{http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}}
     % TODO : ne sera probablement pas fait faute de temps.
@@ -631,7 +632,7 @@
 \begin{frame}
   \frametitle{Rivières}
   \begin{itemize}
-  \item<1-> Pathfinding {\tiny\url{http://www.umbrarumregnum.net/articles/creating-rivers}}
+  \item<1-> Pathfinding. {\tiny\url{http://www.umbrarumregnum.net/articles/creating-rivers}}
 	% TODO : Image (ne sera pas fait, manque de temps).
   \item<2-> Affinage du tracé en fonction du LOD.
 	% TODO : Schéma sur 3 niveaux d'affinage en 3 étapes.
@@ -661,7 +662,7 @@
 \begin{frame}
   \frametitle{Isosurfaces}
   \begin{itemize}
-    \item Metaballs {\small \texttt{/usr/lib/xscreensaver/metaballs}}
+    \item Metaballs. {\tiny\texttt{/usr/lib/xscreensaver/metaballs}}
     \item Surface 2D d'un bruit 3D.
     \item Simplification de nuages.
     \item Surface de l'eau.
@@ -717,10 +718,10 @@
   \end{figure}
   \begin{itemize}
   \item<1-> Très simple, très petit code.
-  \item<8-> Sampling
-  \item<9-> Très lent
-  \item<10-> Démonstration {\small \url{http://forum.osdev.org/viewtopic.php?p=170625#p170625}}
-  \item<11-> Monte Carlo
+  \item<8-> Sampling.
+  \item<9-> Très lent.
+  \item<10-> Démonstration. {\small\url{http://forum.osdev.org/viewtopic.php?p=170625\#p170625}}
+  \item<11-> Monte Carlo.
   \end{itemize}
 \end{frame}
 
@@ -865,7 +866,7 @@
   \item Tiles avec LOD maximal.
   \item Qualité progressive des tiles.
   \item Geometry clipmaps.
-  \item \texttt{/usr/lib/xscreensaver/crackberg}
+  \item Démonstration. {\tiny\texttt{/usr/lib/xscreensaver/crackberg}}
   \end{itemize}
 \end{frame}
 
@@ -882,23 +883,23 @@
 % * [Plein d'algos](http://planetgenesis.sourceforge.net/docs15/noise/noise.html#tileworley) dont plusieurs basés sur une sorte de voronoi donc à priori trop lents.
 % * Affichage avec Ogre : [forum](http://www.ogre3d.org/forums/viewtopic.php?f=5&t=67177&p=442222), [doc](http://www.ogre3d.org/docs/api/html/classOgre_1_1BillboardSet.html)
   \begin{itemize}
-  \item Perlin noise {\tiny \url{http://freespace.virgin.net/hugo.elias/models/m_perlin.htm}}
-  \item http://www.gamasutra.com
-  \item http://vterrain.org
+  \item Perlin noise. {\tiny\url{http://freespace.virgin.net/hugo.elias/models/m_perlin.htm}}
+  \item {\tiny\url{http://www.gamasutra.com}}
+  \item {\tiny\url{http://vterrain.org}}
   % \item Mojoworld generator (mojoworld.org)
-  \item http://world-machine.com
-  \item Algorithmes de bruit {\tiny \url{http://www.sluniverse.com/php/vb/project-development/34994-automatically-generated-terrain-map.html}}
-  \item Composition d'algorithmes de bruit {\tiny \url{http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}}
-  \item Création de cartes polygonales {\tiny \url{http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}}
-  \item Pathfinding pour créer des rivières {\tiny \url{http://www.umbrarumregnum.net/articles/creating-rivers}}
+  \item {\tiny\url{http://world-machine.com}}
+  \item Algorithmes de bruit. {\tiny\url{http://www.sluniverse.com/php/vb/project-development/34994-automatically-generated-terrain-map.html}}
+  \item Composition d'algorithmes de bruit. {\tiny\url{http://www.gamedev.net/blog/33/entry-2249260-procedural-islands-redux/}}
+  \item Création de cartes polygonales. {\tiny\url{http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/}}
+  \item Pathfinding pour créer des rivières. {\tiny\url{http://www.umbrarumregnum.net/articles/creating-rivers}}
   \end{itemize}
 \end{frame}
 
 \begin{frame}
   \frametitle{À propos}
   \begin{itemize}
-  \item Utilise pgf/tikz 2.10% TODO : url.
-  \item Graine aléatoire~: \noiseseed
+  \item Utilise pgf/tikz 2.10~.% TODO : url.
+  \item Graine aléatoire~: \noiseseed~.
   \end{itemize}
 \end{frame}
 
